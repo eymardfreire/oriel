@@ -1,0 +1,10 @@
+{
+  "id": "trade",
+  "title": "Trade",
+  "bays": [
+    {
+      "id": "trade",
+      "role": "Policy, freight, and supply chain"
+    }
+  ]
+}

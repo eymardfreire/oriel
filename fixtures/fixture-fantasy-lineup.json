@@ -1,0 +1,25 @@
+{
+  "id": "fixture-fantasy-lineup",
+  "domain": "sports",
+  "title": "Lineup",
+  "updated_at": "2026-01-01T00:00:00Z",
+  "stale": false,
+  "stale_reason": "",
+  "fixture": true,
+  "items": [
+    {
+      "id": "fixture-player-qb",
+      "title": "Fixture Player",
+      "source": "Oriel fixture",
+      "source_url": "",
+      "observed_at": "2026-01-01T00:00:00Z",
+      "row": "fantasy",
+      "fields": {
+        "player": "Fixture Player",
+        "position": "QB",
+        "team": "FIX",
+        "slot": "QB"
+      }
+    }
+  ]
+}

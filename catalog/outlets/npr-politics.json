@@ -1,0 +1,9 @@
+{
+  "id": "npr-politics",
+  "name": "NPR",
+  "fetch": "https://feeds.npr.org/1014/rss.xml",
+  "language": "en",
+  "region": "us",
+  "desks": ["politics"],
+  "enabled": true
+}

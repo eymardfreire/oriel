@@ -1,0 +1,42 @@
+# Oriel aggregation service.
+# Bind address and home place. No upstream API keys.
+# Wires polls the public RSS catalog. Markets polls the selected instruments.
+# Trade polls policy, freight, and supply-chain feeds. It does not fetch quotes.
+# There are no upstream API keys in this file.
+
+bind_host = "127.0.0.1"
+bind_port = 8787
+
+# Primary home, also reported by /health. Add more homes in catalog/weather/places.json
+# with "home": true. Change this block to move the primary home.
+# Coordinates are the Open-Meteo geocoder result for Tampa, Florida, checked 2026-09-23.
+[home_place]
+id = "tampa"
+name = "Tampa"
+latitude = 27.94752
+longitude = -82.45843
+
+[wires]
+enabled = true
+refresh_seconds = 120
+stale_after_seconds = 900
+
+[markets]
+enabled = true
+refresh_seconds = 60
+stale_after_seconds = 900
+
+[trade]
+enabled = true
+refresh_seconds = 300
+stale_after_seconds = 3600
+
+[weather]
+enabled = true
+refresh_seconds = 300
+stale_after_seconds = 3600
+
+[sports]
+enabled = true
+refresh_seconds = 60
+stale_after_seconds = 900

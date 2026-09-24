@@ -1,0 +1,13 @@
+{
+  "id": "storm",
+  "title": "Storm",
+  "theme": "night",
+  "layout": "stack",
+  "refresh_seconds": 300,
+  "panels": [
+    "fixture-weather-observation",
+    "fixture-weather-forecast",
+    "fixture-weather-alert",
+    "fixture-weather-news"
+  ]
+}

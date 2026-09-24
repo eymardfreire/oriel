@@ -1,0 +1,8 @@
+{
+  "id": "far",
+  "title": "Far Desk",
+  "theme": "night",
+  "layout": "stack",
+  "refresh_seconds": 600,
+  "panels": []
+}

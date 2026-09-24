@@ -1,0 +1,9 @@
+{
+  "id": "nyt-us",
+  "name": "The New York Times",
+  "fetch": "https://rss.nytimes.com/services/xml/rss/nyt/US.xml",
+  "language": "en",
+  "region": "us",
+  "desks": ["regional"],
+  "enabled": true
+}

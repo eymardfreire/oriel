@@ -1,0 +1,5 @@
+{
+  "policy": { "enabled": true },
+  "freight": { "enabled": true },
+  "supply-chain": { "enabled": true }
+}

@@ -1,0 +1,17 @@
+{
+  "id": "day",
+  "mode": "light",
+  "roles": {
+    "bg": "#f7f6f3",
+    "surface": "#ffffff",
+    "border": "#d8d5ce",
+    "text": "#1c1c1c",
+    "muted": "#6e6e6e",
+    "accent": "#2f5d9f",
+    "up": "#1e7a4c",
+    "down": "#b33b3b",
+    "warn": "#9a6700",
+    "info": "#2f5d9f",
+    "stale": "#8a6f45"
+  }
+}

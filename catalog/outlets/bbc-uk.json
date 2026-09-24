@@ -1,0 +1,9 @@
+{
+  "id": "bbc-uk",
+  "name": "BBC News",
+  "fetch": "https://feeds.bbci.co.uk/news/uk/rss.xml",
+  "language": "en",
+  "region": "gb",
+  "desks": ["regional"],
+  "enabled": true
+}

@@ -1,0 +1,9 @@
+{
+  "id": "guardian-business",
+  "name": "The Guardian",
+  "fetch": "https://www.theguardian.com/uk/business/rss",
+  "language": "en",
+  "region": "gb",
+  "desks": ["business"],
+  "enabled": true
+}

@@ -1,0 +1,9 @@
+{
+  "id": "ars-technica",
+  "name": "Ars Technica",
+  "fetch": "https://feeds.arstechnica.com/arstechnica/index",
+  "language": "en",
+  "region": "us",
+  "desks": ["technology"],
+  "enabled": true
+}

@@ -1,0 +1,10 @@
+{
+  "id": "storm",
+  "title": "Storm",
+  "bays": [
+    {
+      "id": "storm",
+      "role": "Alerts, forecast, and weather news"
+    }
+  ]
+}

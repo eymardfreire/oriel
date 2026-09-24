@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "trade-source.schema.json",
+  "title": "Trade sources",
+  "description": "One public RSS source per trade family. The server is the only process that fetches these. These are not market quotes.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["policy", "freight", "supply-chain"],
+  "properties": {
+    "policy": { "$ref": "#/$defs/source" },
+    "freight": { "$ref": "#/$defs/source" },
+    "supply-chain": { "$ref": "#/$defs/source" }
+  },
+  "$defs": {
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "fetch", "note"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "name": { "type": "string", "minLength": 1 },
+        "fetch": { "type": "string", "minLength": 1 },
+        "note": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

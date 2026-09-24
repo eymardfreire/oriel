@@ -1,0 +1,8 @@
+{
+  "id": "wires",
+  "title": "Wires",
+  "theme": "night",
+  "layout": "stack",
+  "refresh_seconds": 120,
+  "panels": ["fixture-wires-headline"]
+}

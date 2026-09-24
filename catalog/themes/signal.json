@@ -1,0 +1,17 @@
+{
+  "id": "signal",
+  "mode": "dark",
+  "roles": {
+    "bg": "#000000",
+    "surface": "#0d0d0d",
+    "border": "#333333",
+    "text": "#ffffff",
+    "muted": "#a3a3a3",
+    "accent": "#4da3ff",
+    "up": "#3dcc7a",
+    "down": "#ff5c5c",
+    "warn": "#ffc14a",
+    "info": "#4da3ff",
+    "stale": "#c9a15a"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "id": "brief",
+  "title": "Brief",
+  "bays": [
+    {
+      "id": "brief",
+      "role": "Clock, home weather, a short wire, and a market strip"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "id": "wires",
+  "title": "Wires",
+  "bays": [
+    {
+      "id": "wires",
+      "role": "Headlines by region and topic"
+    }
+  ]
+}

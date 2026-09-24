@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "market-source.schema.json",
+  "title": "Market sources",
+  "description": "One delayed public source per instrument family. The server is the only process that fetches these.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["indices", "equities", "fx", "rates", "commodities", "crypto"],
+  "properties": {
+    "indices": { "$ref": "#/$defs/source" },
+    "equities": { "$ref": "#/$defs/source" },
+    "fx": { "$ref": "#/$defs/source" },
+    "rates": { "$ref": "#/$defs/source" },
+    "commodities": { "$ref": "#/$defs/source" },
+    "crypto": { "$ref": "#/$defs/source" }
+  },
+  "$defs": {
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "kind", "delayed", "fetch", "note"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "kind": {
+          "type": "string",
+          "enum": ["yahoo-chart", "frankfurter", "treasury-yields", "coingecko"]
+        },
+        "delayed": { "type": "boolean" },
+        "fetch": { "type": "string", "minLength": 1 },
+        "note": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

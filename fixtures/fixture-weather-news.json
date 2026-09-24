@@ -1,0 +1,20 @@
+{
+  "id": "fixture-weather-news",
+  "domain": "weather-news",
+  "title": "Weather news",
+  "updated_at": "2026-01-01T00:00:00Z",
+  "stale": false,
+  "stale_reason": "",
+  "fixture": true,
+  "items": [
+    {
+      "id": "fixture-weather-story",
+      "title": "Fixture weather story",
+      "source": "Oriel fixture",
+      "source_url": "",
+      "observed_at": "2026-01-01T00:00:00Z",
+      "row": "headline",
+      "fields": {}
+    }
+  ]
+}

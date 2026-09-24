@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sports-competition.schema.json",
+  "title": "Sports catalog",
+  "description": "Competitions with a verified public source. Each entry has one coverage tier. The server is the only process that fetches these.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["checked", "note", "competitions"],
+  "properties": {
+    "checked": { "type": "string", "minLength": 1 },
+    "note": { "type": "string", "minLength": 1 },
+    "competitions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/competition" }
+    }
+  },
+  "$defs": {
+    "competition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "family", "name", "tier", "source_id", "source_name", "kind", "fetch", "note"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "family": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "tier": { "type": "string", "enum": ["live", "delayed", "results", "schedule", "far"] },
+        "source_id": { "type": "string", "minLength": 1 },
+        "source_name": { "type": "string", "minLength": 1 },
+        "kind": { "type": "string", "enum": ["mlb-schedule", "nhl-schedule", "openligadb", "jolpica-results", "fixture"] },
+        "fetch": { "type": "string", "minLength": 1 },
+        "note": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

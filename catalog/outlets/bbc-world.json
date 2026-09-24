@@ -1,0 +1,9 @@
+{
+  "id": "bbc-world",
+  "name": "BBC News",
+  "fetch": "https://feeds.bbci.co.uk/news/world/rss.xml",
+  "language": "en",
+  "region": "world",
+  "desks": ["world"],
+  "enabled": true
+}

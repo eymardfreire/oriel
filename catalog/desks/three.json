@@ -1,0 +1,18 @@
+{
+  "id": "three",
+  "title": "Three",
+  "bays": [
+    {
+      "id": "wires",
+      "role": "Headlines by region and topic"
+    },
+    {
+      "id": "markets",
+      "role": "Dense quotes"
+    },
+    {
+      "id": "field",
+      "role": "Followed sports that are live or recently final"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "id": "fixture-trade-headline",
+  "domain": "trade",
+  "title": "Policy",
+  "updated_at": "2026-01-01T00:00:00Z",
+  "stale": false,
+  "stale_reason": "",
+  "fixture": true,
+  "items": [
+    {
+      "id": "fixture-trade",
+      "title": "Fixture trade item",
+      "source": "Oriel fixture",
+      "source_url": "",
+      "observed_at": "2026-01-01T00:00:00Z",
+      "row": "headline",
+      "fields": {
+        "family": "policy"
+      }
+    }
+  ]
+}

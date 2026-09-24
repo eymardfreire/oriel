@@ -1,0 +1,17 @@
+{
+  "id": "paper",
+  "mode": "light",
+  "roles": {
+    "bg": "#f3efe6",
+    "surface": "#faf7f1",
+    "border": "#ddd4c6",
+    "text": "#1c1c1c",
+    "muted": "#7a7166",
+    "accent": "#8c3a2f",
+    "up": "#2a6b45",
+    "down": "#9c2f2f",
+    "warn": "#a15c12",
+    "info": "#3e5c73",
+    "stale": "#8d7350"
+  }
+}

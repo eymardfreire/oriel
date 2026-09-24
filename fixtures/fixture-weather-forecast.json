@@ -1,0 +1,26 @@
+{
+  "id": "fixture-weather-forecast",
+  "domain": "weather",
+  "title": "Forecast",
+  "updated_at": "2026-01-01T00:00:00Z",
+  "stale": false,
+  "stale_reason": "",
+  "fixture": true,
+  "items": [
+    {
+      "id": "fixture-forecast",
+      "title": "Fixture forecast",
+      "source": "Oriel fixture",
+      "source_url": "",
+      "observed_at": "2026-01-01T00:00:00Z",
+      "row": "forecast",
+      "fields": {
+        "place": "Fixture Place",
+        "period": "2026-01-01",
+        "temperature_high_c": 24,
+        "temperature_low_c": 16,
+        "condition": "clear (fixture)"
+      }
+    }
+  ]
+}

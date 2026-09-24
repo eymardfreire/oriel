@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bay.schema.json",
+  "title": "Bay",
+  "description": "One terminal window. The layout places panels. It does not fetch.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "title", "theme", "layout", "panels", "refresh_seconds"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "title": { "type": "string", "minLength": 1 },
+    "theme": {
+      "type": "string",
+      "enum": ["night", "day", "wire", "paper", "fog", "signal"]
+    },
+    "layout": {
+      "type": "string",
+      "enum": ["strip", "stack", "split", "dense"]
+    },
+    "panels": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "description": "Panel ids this bay places, in order."
+    },
+    "refresh_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "How often the client asks the Oriel server for a new payload. The client does not call upstream sources."
+    }
+  }
+}

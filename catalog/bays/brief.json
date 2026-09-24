@@ -1,0 +1,12 @@
+{
+  "id": "brief",
+  "title": "Brief",
+  "theme": "night",
+  "layout": "strip",
+  "refresh_seconds": 60,
+  "panels": [
+    "fixture-weather-observation",
+    "fixture-wires-headline",
+    "fixture-markets-quote"
+  ]
+}

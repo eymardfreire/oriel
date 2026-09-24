@@ -1,0 +1,8 @@
+{
+  "id": "trade",
+  "title": "Trade",
+  "theme": "night",
+  "layout": "stack",
+  "refresh_seconds": 300,
+  "panels": ["fixture-trade-headline"]
+}

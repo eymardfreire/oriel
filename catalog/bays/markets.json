@@ -1,0 +1,8 @@
+{
+  "id": "markets",
+  "title": "Markets",
+  "theme": "night",
+  "layout": "stack",
+  "refresh_seconds": 30,
+  "panels": ["fixture-markets-quote"]
+}

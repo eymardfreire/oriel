@@ -1,0 +1,9 @@
+{
+  "id": "bbc-technology",
+  "name": "BBC News",
+  "fetch": "https://feeds.bbci.co.uk/news/technology/rss.xml",
+  "language": "en",
+  "region": "world",
+  "desks": ["technology"],
+  "enabled": true
+}

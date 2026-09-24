@@ -1,0 +1,24 @@
+{
+  "id": "fixture-weather-observation",
+  "domain": "weather",
+  "title": "Weather",
+  "updated_at": "2026-01-01T00:00:00Z",
+  "stale": false,
+  "stale_reason": "",
+  "fixture": true,
+  "items": [
+    {
+      "id": "fixture-observation",
+      "title": "Fixture observation",
+      "source": "Oriel fixture",
+      "source_url": "",
+      "observed_at": "2026-01-01T00:00:00Z",
+      "row": "observation",
+      "fields": {
+        "place": "Fixture Place",
+        "temperature_c": 21,
+        "condition": "clear (fixture)"
+      }
+    }
+  ]
+}

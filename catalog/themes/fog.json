@@ -1,0 +1,17 @@
+{
+  "id": "fog",
+  "mode": "dark",
+  "roles": {
+    "bg": "#1a1d21",
+    "surface": "#22262c",
+    "border": "#31363d",
+    "text": "#c5c8ce",
+    "muted": "#8b9098",
+    "accent": "#8eacc9",
+    "up": "#8fb59a",
+    "down": "#d09898",
+    "warn": "#c9b27a",
+    "info": "#8eacc9",
+    "stale": "#a89878"
+  }
+}

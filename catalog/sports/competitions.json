@@ -1,0 +1,50 @@
+{
+  "checked": "2026-09-23",
+  "note": "Only competitions with a public feed that answered on this date. No multi-sport API key. NBA's public scoreboard returned 403. OpenDota returned 522. NFL game scores are omitted; Sleeper is used for fantasy points only.",
+  "competitions": [
+    {
+      "id": "mlb",
+      "family": "baseball",
+      "name": "Major League Baseball",
+      "tier": "live",
+      "source_id": "mlb-stats",
+      "source_name": "MLB Stats API",
+      "kind": "mlb-schedule",
+      "fetch": "https://statsapi.mlb.com/api/v1/schedule?sportId=1",
+      "note": "League schedule with scores. Checked 2026-09-23. No API key."
+    },
+    {
+      "id": "nhl",
+      "family": "ice-hockey",
+      "name": "National Hockey League",
+      "tier": "live",
+      "source_id": "nhl-web",
+      "source_name": "NHL",
+      "kind": "nhl-schedule",
+      "fetch": "https://api-web.nhle.com/v1/schedule/now",
+      "note": "Official schedule with scores. Checked 2026-09-23. No API key."
+    },
+    {
+      "id": "bundesliga",
+      "family": "football",
+      "name": "Bundesliga",
+      "tier": "results",
+      "source_id": "openligadb",
+      "source_name": "OpenLigaDB",
+      "kind": "openligadb",
+      "fetch": "https://api.openligadb.de/getmatchdata/bl1/2026",
+      "note": "Public match results for the 2026/2027 season. Checked 2026-09-23. Finals only, not an in-play feed. No API key."
+    },
+    {
+      "id": "formula-1",
+      "family": "motorsport",
+      "name": "Formula 1",
+      "tier": "results",
+      "source_id": "jolpica",
+      "source_name": "Jolpica",
+      "kind": "jolpica-results",
+      "fetch": "https://api.jolpi.ca/ergast/f1/current/last/results.json",
+      "note": "Last race classification. Checked 2026-09-23. Not live timing. No API key."
+    }
+  ]
+}

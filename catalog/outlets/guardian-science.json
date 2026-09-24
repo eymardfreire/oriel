@@ -1,0 +1,9 @@
+{
+  "id": "guardian-science",
+  "name": "The Guardian",
+  "fetch": "https://www.theguardian.com/science/rss",
+  "language": "en",
+  "region": "world",
+  "desks": ["science"],
+  "enabled": true
+}

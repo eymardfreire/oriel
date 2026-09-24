@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "weather-place.schema.json",
+  "title": "Watched places",
+  "description": "Extra places besides the home place in server config. The server fetches weather only for these places and the home place.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+      "required": ["id", "name", "latitude", "longitude", "home"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "name": { "type": "string", "minLength": 1 },
+        "latitude": { "type": "number", "minimum": -90, "maximum": 90 },
+        "longitude": { "type": "number", "minimum": -180, "maximum": 180 },
+        "home": {
+          "type": "boolean",
+          "description": "When true, this place is a home. Brief shows every home. Storm also shows places with home set to false."
+        }
+      }
+  }
+}

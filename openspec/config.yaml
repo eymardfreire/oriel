@@ -1,0 +1,36 @@
+schema: spec-driven
+
+context: |
+  Product: Oriel. A modular terminal desk for world data.
+  An oriel is a bay window that looks out in more than one direction.
+  Each OS window is one bay. A desk is a named set of bays.
+  Aggregation runs on the operator's Omarch machine (i7-8700K, 32 GB RAM, RTX 2080).
+  The terminal client never calls upstream sources. It renders server payloads.
+  Server: Python 3.12, FastAPI. Client: Go, Bubble Tea, Lip Gloss. One client process per window.
+  Shared JSON contracts in contracts/ are the only integration surface.
+  Those contracts are what later moves into Second Brain. Do not couple domains to the TUI.
+  Domains: markets, trade, wires (news), weather, weather-news, sports (including Far Desk and an NFL fantasy bay).
+  Fantasy roster and player pins belong to Oriel. Do not import ESPN, Yahoo, or Sleeper league logins.
+  A fantasy player pin is not a bay pin. Bay pins belong to recommendations.
+  Situation (conflict, disaster, infrastructure) is a reserved domain, not a v1 build.
+  Specs use SHALL/MUST and #### Scenario blocks. Work one section at a time.
+  The active change is establish-oriel-foundation. Read openspec/HANDOFF.md before coding.
+  Do not copy World Monitor code, feed compilations, or call api.worldmonitor.app.
+  Do not import PatchNotesLive. It is prior art only.
+  Free or operator-supplied keys only. Label delayed, stale, and far-coverage data.
+  Never invent scores, quotes, or weather values.
+
+rules:
+  proposal:
+    - State which section this change belongs to
+    - Keep one product intent per change
+  specs:
+    - Behavior only. Lock libraries and file layout in design.md
+    - Every requirement uses SHALL or MUST and has at least one #### Scenario
+    - Sports and market numbers must say what is shown when the source is missing
+  design:
+    - Name the domain, the payload, and the failure mode
+    - Prefer a catalog entry over a new code path
+  tasks:
+    - Order work so a later section can stop at a handoff gate
+    - Do not bundle a new upstream source into a UI-only task

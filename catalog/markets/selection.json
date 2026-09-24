@@ -1,0 +1,45 @@
+{
+  "indices": {
+    "enabled": true,
+    "instruments": [
+      {"symbol": "SPX", "query": "^GSPC", "title": "S&P 500"},
+      {"symbol": "DJI", "query": "^DJI", "title": "Dow Jones"},
+      {"symbol": "NDX", "query": "^NDX", "title": "Nasdaq 100"}
+    ]
+  },
+  "equities": {
+    "enabled": true,
+    "instruments": [
+      {"symbol": "AAPL", "query": "AAPL", "title": "Apple"},
+      {"symbol": "MSFT", "query": "MSFT", "title": "Microsoft"}
+    ]
+  },
+  "fx": {
+    "enabled": true,
+    "instruments": [
+      {"symbol": "EURUSD", "base": "EUR", "counter": "USD", "title": "Euro / US dollar"},
+      {"symbol": "USDJPY", "base": "USD", "counter": "JPY", "title": "US dollar / Yen"}
+    ]
+  },
+  "rates": {
+    "enabled": true,
+    "instruments": [
+      {"symbol": "US2Y", "field": "BC_2YEAR", "title": "US 2-year"},
+      {"symbol": "US10Y", "field": "BC_10YEAR", "title": "US 10-year"}
+    ]
+  },
+  "commodities": {
+    "enabled": true,
+    "instruments": [
+      {"symbol": "XAU", "query": "GC=F", "title": "Gold"},
+      {"symbol": "WTI", "query": "CL=F", "title": "WTI crude"}
+    ]
+  },
+  "crypto": {
+    "enabled": true,
+    "instruments": [
+      {"symbol": "BTC", "query": "bitcoin", "title": "Bitcoin"},
+      {"symbol": "ETH", "query": "ethereum", "title": "Ethereum"}
+    ]
+  }
+}

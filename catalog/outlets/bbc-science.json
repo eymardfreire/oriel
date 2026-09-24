@@ -1,0 +1,9 @@
+{
+  "id": "bbc-science",
+  "name": "BBC News",
+  "fetch": "https://feeds.bbci.co.uk/news/science_and_environment/rss.xml",
+  "language": "en",
+  "region": "world",
+  "desks": ["science"],
+  "enabled": true
+}

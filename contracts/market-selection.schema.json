@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "market-selection.schema.json",
+  "title": "Market selection",
+  "description": "Operator choice of families and instruments. A hidden family is not fetched. The panel does not add instruments that are absent here.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["indices", "equities", "fx", "rates", "commodities", "crypto"],
+  "properties": {
+    "indices": { "$ref": "#/$defs/family" },
+    "equities": { "$ref": "#/$defs/family" },
+    "fx": { "$ref": "#/$defs/family" },
+    "rates": { "$ref": "#/$defs/family" },
+    "commodities": { "$ref": "#/$defs/family" },
+    "crypto": { "$ref": "#/$defs/family" }
+  },
+  "$defs": {
+    "family": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "instruments"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "instruments": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/instrument" }
+        }
+      }
+    },
+    "instrument": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["symbol", "title"],
+      "properties": {
+        "symbol": { "type": "string", "minLength": 1 },
+        "title": { "type": "string", "minLength": 1 },
+        "query": { "type": "string", "minLength": 1 },
+        "base": { "type": "string", "minLength": 3, "maxLength": 3 },
+        "counter": { "type": "string", "minLength": 3, "maxLength": 3 },
+        "field": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "id": "fixture-weather-alert",
+  "domain": "weather",
+  "title": "Alerts",
+  "updated_at": "2026-01-01T00:00:00Z",
+  "stale": false,
+  "stale_reason": "",
+  "fixture": true,
+  "items": [
+    {
+      "id": "fixture-alert",
+      "title": "No alerts are active",
+      "source": "Oriel fixture",
+      "source_url": "",
+      "observed_at": "2026-01-01T00:00:00Z",
+      "row": "alert",
+      "fields": {
+        "headline": "No alerts are active"
+      }
+    }
+  ]
+}

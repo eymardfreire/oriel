@@ -1,0 +1,10 @@
+{
+  "id": "markets",
+  "title": "Markets",
+  "bays": [
+    {
+      "id": "markets",
+      "role": "Dense quotes"
+    }
+  ]
+}

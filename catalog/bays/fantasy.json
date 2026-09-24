@@ -1,0 +1,8 @@
+{
+  "id": "fantasy",
+  "title": "Fantasy",
+  "theme": "night",
+  "layout": "stack",
+  "refresh_seconds": 60,
+  "panels": ["fixture-fantasy-lineup"]
+}

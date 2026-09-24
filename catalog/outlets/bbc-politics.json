@@ -1,0 +1,9 @@
+{
+  "id": "bbc-politics",
+  "name": "BBC News",
+  "fetch": "https://feeds.bbci.co.uk/news/politics/rss.xml",
+  "language": "en",
+  "region": "gb",
+  "desks": ["politics"],
+  "enabled": true
+}

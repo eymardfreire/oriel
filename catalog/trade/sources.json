@@ -1,0 +1,20 @@
+{
+  "policy": {
+    "id": "wto-news",
+    "name": "WTO",
+    "fetch": "https://www.wto.org/library/rss/latest_news_e.xml",
+    "note": "Checked 2026-09-23. Public WTO news RSS returned policy items with titles and dates. No login and no API key."
+  },
+  "freight": {
+    "id": "freightwaves",
+    "name": "FreightWaves",
+    "fetch": "https://www.freightwaves.com/rss",
+    "note": "Checked 2026-09-23. Public freight RSS returned headlines. No login and no API key. The Federal Maritime Commission feed was stale, so it is not the source."
+  },
+  "supply-chain": {
+    "id": "supply-chain-dive",
+    "name": "Supply Chain Dive",
+    "fetch": "https://www.supplychaindive.com/feeds/news/",
+    "note": "Checked 2026-09-23. Public supply-chain RSS returned headlines. No login and no API key."
+  }
+}

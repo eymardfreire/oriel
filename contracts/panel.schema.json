@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "panel.schema.json",
+  "title": "Panel payload",
+  "description": "One panel of items. Domain-specific values live in fields. See fields.md. Payloads carry no colors.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "domain", "title", "updated_at", "stale", "stale_reason", "items"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "domain": {
+      "type": "string",
+      "enum": ["markets", "trade", "wires", "weather", "weather-news", "sports"]
+    },
+    "title": { "type": "string" },
+    "updated_at": { "type": "string", "format": "date-time" },
+    "stale": { "type": "boolean" },
+    "stale_reason": {
+      "type": "string",
+      "description": "Empty when stale is false."
+    },
+    "fixture": {
+      "type": "boolean",
+      "description": "True when the payload is sample data and not a live fetch. Live payloads omit this or set it false."
+    },
+    "items": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/item" }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "stale": { "const": false } },
+        "required": ["stale"]
+      },
+      "then": {
+        "properties": { "stale_reason": { "const": "" } }
+      }
+    }
+  ],
+  "$defs": {
+    "item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "source", "source_url", "observed_at", "row", "fields"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "title": { "type": "string" },
+        "source": { "type": "string" },
+        "source_url": { "type": "string" },
+        "observed_at": { "type": "string", "format": "date-time" },
+        "row": {
+          "type": "string",
+          "enum": ["quote", "headline", "score", "alert", "clock", "fantasy", "observation", "forecast"],
+          "description": "Selects the client row renderer together with domain."
+        },
+        "fields": {
+          "type": "object",
+          "description": "Domain-specific values documented in fields.md. No color or theme keys."
+        }
+      }
+    }
+  }
+}

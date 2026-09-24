@@ -1,0 +1,9 @@
+{
+  "id": "bbc-business",
+  "name": "BBC News",
+  "fetch": "https://feeds.bbci.co.uk/news/business/rss.xml",
+  "language": "en",
+  "region": "world",
+  "desks": ["business"],
+  "enabled": true
+}

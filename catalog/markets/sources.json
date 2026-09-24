@@ -1,0 +1,50 @@
+{
+  "indices": {
+    "id": "yahoo-chart",
+    "name": "Yahoo Finance",
+    "kind": "yahoo-chart",
+    "delayed": true,
+    "fetch": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}",
+    "note": "Checked 2026-09-23. Stooq's public CSV returned 404 or a browser check, so it is not the board. This chart endpoint returned index prices with no login and no API key. Rows stay marked delayed."
+  },
+  "equities": {
+    "id": "yahoo-chart",
+    "name": "Yahoo Finance",
+    "kind": "yahoo-chart",
+    "delayed": true,
+    "fetch": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}",
+    "note": "Same delayed chart endpoint as indices. Checked 2026-09-23 with AAPL and MSFT. No login and no API key."
+  },
+  "fx": {
+    "id": "frankfurter",
+    "name": "Frankfurter",
+    "kind": "frankfurter",
+    "delayed": true,
+    "fetch": "https://api.frankfurter.app/{start}..{end}",
+    "note": "ECB reference rates via Frankfurter. Checked 2026-09-23. This is the prior business day's reference, not a live FX feed."
+  },
+  "rates": {
+    "id": "us-treasury",
+    "name": "US Treasury",
+    "kind": "treasury-yields",
+    "delayed": true,
+    "fetch": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve&field_tdr_date_value={year}",
+    "note": "Daily Treasury par yield curve. Checked 2026-09-23. FRED was not enabled because it needs an API key."
+  },
+  "commodities": {
+    "id": "yahoo-chart",
+    "name": "Yahoo Finance",
+    "kind": "yahoo-chart",
+    "delayed": true,
+    "fetch": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}",
+    "note": "Delayed futures quotes. Checked 2026-09-23 with GC=F and CL=F. No login and no API key."
+  },
+  "crypto": {
+    "id": "coingecko",
+    "name": "CoinGecko",
+    "kind": "coingecko",
+    "delayed": true,
+    "fetch": "https://api.coingecko.com/api/v3/simple/price",
+    "note": "Public simple price with no API key. Checked 2026-09-23. Labeled delayed because it is not an exchange feed."
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "id": "field",
+  "title": "Field",
+  "bays": [
+    {
+      "id": "field",
+      "role": "Followed sports that are live or recently final"
+    }
+  ]
+}

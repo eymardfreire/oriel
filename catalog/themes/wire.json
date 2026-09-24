@@ -1,0 +1,17 @@
+{
+  "id": "wire",
+  "mode": "dark",
+  "roles": {
+    "bg": "#0c0c0c",
+    "surface": "#141414",
+    "border": "#262626",
+    "text": "#e6e6e6",
+    "muted": "#8a8a8a",
+    "accent": "#f0c14a",
+    "up": "#7dcea0",
+    "down": "#e07a7a",
+    "warn": "#f0c14a",
+    "info": "#f0c14a",
+    "stale": "#8a7340"
+  }
+}

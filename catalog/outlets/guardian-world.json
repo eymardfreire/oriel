@@ -1,0 +1,9 @@
+{
+  "id": "guardian-world",
+  "name": "The Guardian",
+  "fetch": "https://www.theguardian.com/world/rss",
+  "language": "en",
+  "region": "world",
+  "desks": ["world"],
+  "enabled": true
+}

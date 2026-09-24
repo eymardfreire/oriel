@@ -1,0 +1,26 @@
+{
+  "id": "fixture-sports-row",
+  "domain": "sports",
+  "title": "Field",
+  "updated_at": "2026-01-01T00:00:00Z",
+  "stale": false,
+  "stale_reason": "",
+  "fixture": true,
+  "items": [
+    {
+      "id": "fixture-match",
+      "title": "Fixture Home vs Fixture Away",
+      "source": "Oriel fixture",
+      "source_url": "",
+      "observed_at": "2026-01-01T00:00:00Z",
+      "row": "score",
+      "fields": {
+        "home": "Fixture Home",
+        "away": "Fixture Away",
+        "score": "1-0",
+        "state": "final",
+        "tier": "results"
+      }
+    }
+  ]
+}
