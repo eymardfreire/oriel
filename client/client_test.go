@@ -1363,19 +1363,24 @@ func TestFieldFollowPickerTogglesACompetition(t *testing.T) {
 	if !picker.follows || !strings.Contains(stripANSI(picker.View()), "Major League Baseball") || strings.Contains(stripANSI(picker.View()), "0-1") {
 		t.Fatal("picker did not list the competition without a score")
 	}
-	cmdModel, cmd := picker.onKey("1")
+	moved, cmd := picker.onKey("1")
+	if cmd != nil {
+		t.Fatal("digit selected before enter")
+	}
+	cmdModel, cmd := moved.(model).onKey("enter")
 	if cmd == nil {
-		t.Fatal("digit did not post a follow")
+		t.Fatal("enter did not post a follow")
 	}
 	updated, _ := cmdModel.Update(cmd())
 	after := updated.(model)
 	first, firstReady, firstValid := followPick("1", 15, false)
 	confirmed, confirmedReady, confirmedValid := followPick("1", 15, true)
 	twelfth, twelfthReady, twelfthValid := followPick("12", 15, false)
+	picked, pickedReady, pickedValid := followPick("12", 15, true)
 	if first != 0 || firstReady || !firstValid || !confirmedReady || !confirmedValid || confirmed != 0 {
 		t.Fatal("enter did not confirm competition 1")
 	}
-	if twelfth != 11 || !twelfthReady || !twelfthValid {
+	if twelfth != 11 || twelfthReady || !twelfthValid || picked != 11 || !pickedReady || !pickedValid {
 		t.Fatal("multi-digit follow pick")
 	}
 	if _, _, valid := followPick("16", 15, true); valid {
@@ -1858,5 +1863,110 @@ func TestBriefSelectionChoosesAPlaceAndKeepsABlankPrice(t *testing.T) {
 	}
 	if after.views[0].panels[2].Items[0].Fields["symbol"] != "NOPRICE" {
 		t.Fatalf("brief quote = %+v", after.views[0].panels[2].Items[0].Fields)
+	}
+}
+
+func TestJMovesDownARowAndKMovesUp(t *testing.T) {
+	ids := []string{"trade", "wires", "storm", "sideline", "markets", "field", "brief", "far"}
+	views := make([]bayView, len(ids))
+	for i, id := range ids {
+		views[i] = bayView{bay: Bay{ID: id, Title: id}, panels: []Panel{{Title: id}}}
+	}
+	m := model{views: views, board: true, width: 240, height: 40}
+	down, _ := m.onKey("j")
+	if down.(model).focusedBayID() != "markets" {
+		t.Fatalf("j landed on %s", down.(model).focusedBayID())
+	}
+	up, _ := down.(model).onKey("k")
+	if up.(model).focusedBayID() != "trade" {
+		t.Fatalf("k landed on %s", up.(model).focusedBayID())
+	}
+	across, _ := m.onKey("right")
+	if across.(model).focusedBayID() != "wires" {
+		t.Fatalf("right landed on %s", across.(model).focusedBayID())
+	}
+	back, _ := across.(model).onKey("left")
+	if back.(model).focusedBayID() != "trade" {
+		t.Fatalf("left landed on %s", back.(model).focusedBayID())
+	}
+}
+
+func TestEnterOpensTheBayListAndDoesNotApply(t *testing.T) {
+	root := testRoot(t)
+	theme, err := loadTheme(root, "night")
+	if err != nil {
+		t.Fatal(err)
+	}
+	hint := stripANSI(statusLine(time.Time{}, "Wires", "live", Suggestion{}, theme, 0, "", true, ""))
+	if strings.Contains(hint, "a apply") || strings.Contains(hint, "j/k focus") || !strings.Contains(hint, "j/k rows") || !strings.Contains(hint, "enter select") || !strings.Contains(hint, "? guide") {
+		t.Fatalf("hint = %s", hint)
+	}
+	field := model{views: []bayView{{bay: Bay{ID: "field", Title: "Field"}, panels: []Panel{{
+		Title: "Follows",
+		Items: []Item{{Title: "Major League Baseball", Row: "follow", Fields: map[string]any{"competition_id": "mlb", "followed": false}}},
+	}}}}, width: 80, height: 24}
+	opened, _ := field.onKey("enter")
+	if !opened.(model).follows {
+		t.Fatal("enter did not open follows")
+	}
+	wires := model{
+		views:      []bayView{{bay: Bay{ID: "wires", Title: "Wires"}, panels: []Panel{{Title: "World"}}}},
+		suggestion: Suggestion{DeskID: "storm", Reason: "alert"},
+		width:      80, height: 24,
+	}
+	stayed, _ := wires.onKey("enter")
+	got := stayed.(model)
+	if got.notice != "nothing to select" || got.views[0].bay.ID != "wires" {
+		t.Fatalf("enter applied or missed the notice: %q %s", got.notice, got.views[0].bay.ID)
+	}
+}
+
+func TestGuideExplainsFarDeskAndEnterTogglesABay(t *testing.T) {
+	root := testRoot(t)
+	theme, err := loadTheme(root, "night")
+	if err != nil {
+		t.Fatal(err)
+	}
+	ids, err := listIDs(filepath.Join(root, "catalog", "bays"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	sort.Strings(ids)
+	m := model{
+		views:   []bayView{{bay: Bay{ID: "wires", Title: "Wires"}, panels: []Panel{{Title: "World"}}}},
+		theme:   theme,
+		board:   true,
+		root:    root,
+		bayIDs:  ids,
+		enabled: map[string]bool{"wires": true},
+		width:   120,
+		height:  80,
+	}
+	opened, _ := m.onKey("?")
+	guide := opened.(model)
+	if !guide.settings {
+		t.Fatal("guide did not open")
+	}
+	bays, _ := guide.onKey("right")
+	plain := stripANSI(bays.(model).View())
+	if !strings.Contains(plain, "Far Desk") || !strings.Contains(plain, "3. Liga") || !strings.Contains(plain, "Nippon Baseball League") || !strings.Contains(plain, "not another follow list") {
+		t.Fatalf("guide missed Far Desk: %s", plain)
+	}
+	listed, _ := bays.(model).onKey("right")
+	board := listed.(model)
+	if !strings.Contains(stripANSI(board.View()), "Far Desk") || !strings.Contains(stripANSI(board.View()), "shown") {
+		t.Fatal("board page did not list bays")
+	}
+	far := sort.SearchStrings(ids, "far")
+	if far >= len(ids) || ids[far] != "far" {
+		t.Fatal("far bay missing from the catalog")
+	}
+	jumped, _ := board.onKey(strconv.Itoa(far + 1))
+	cursor := jumped.(model)
+	if cursor.guideCursor != far || cursor.guidePage != 2 {
+		t.Fatalf("number landed on page %d cursor %d", cursor.guidePage, cursor.guideCursor)
+	}
+	if !strings.Contains(stripANSI(cursor.View()), "> ") || !strings.Contains(stripANSI(cursor.View()), "Far Desk") {
+		t.Fatal("cursor did not land on Far Desk")
 	}
 }

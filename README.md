@@ -81,7 +81,21 @@ go run . -bay fantasy -fixture
 go run . -board
 ```
 
-`-bay` defaults to `brief`. `-board` opens on home: wires, markets, storm, and trade. Press `h` to come back to that set. One bay uses the whole window. Two to four bays sit in full-height columns, and more bays wrap into rows. The column count still follows the width bands: one under 100 columns, two from 100, three from 160, four from 240. A bay that cannot show its whole set pages through it every 16 seconds and prints the page as `2/5`, with a dot that moves from green to red as that page runs out. A wide bay puts its panels in columns and fills each column. `j` and `k` pause that paging on the focused bay. `-theme` defaults to the bay's theme (`night` for every shipped bay). Themes: `night`, `day`, `wire`, `paper`, `fog`, `signal`. Press `q` to quit. `j` and `k` move the accent border between panels. `t` cycles the theme for this window. `?` opens settings. On a board, the number keys there show or hide a bay. Outside settings, `s` then a digit saves the current bays and theme into one of nine slots, a digit loads that slot, and `[` `]` cycle the occupied ones. An empty slot stays as it is and the status line says it is empty. On a board, `a` replaces the shown bays with the suggested desk. A single-bay window still starts that desk in new windows.
+`-bay` defaults to `brief`. `-board` opens on home: wires, markets, storm, and trade. Press `h` to come back to that set. One bay uses the whole window. Two to four bays sit in full-height columns, and more bays wrap into rows. The column count still follows the width bands: one under 100 columns, two from 100, three from 160, four from 240. A bay that cannot show its whole set pages through it every 16 seconds and prints the page as `2/5`, with a dot that moves from green to red as that page runs out. A wide bay puts its panels in columns and fills each column. `-theme` defaults to the bay's theme (`night` for every shipped bay). Themes: `night`, `day`, `wire`, `paper`, `fog`, `signal`. Press `q` to quit.
+
+## Keys
+
+`?` opens the guide. Left and right move between its pages. The first page lists the keys. The second page says what each bay is and how to set it up. On a board, the last page shows or hides a bay: `j` and `k` move, a number jumps, and enter confirms.
+
+`j` moves to the bay below. `k` moves to the bay above. Left and right move across the row. Moving also pauses paging on the focused bay for one cycle.
+
+Enter opens the focused bay's list when it has one. Field chooses follows, Sideline chooses sports, and Brief chooses a place, an outlet, and a market family. In a list, `j` and `k` move, a number jumps to a row, and enter selects it. `f` opens the same list.
+
+`h` restores wires, markets, storm, and trade. `p` pauses paging. `t` cycles the theme. Outside the guide, `s` then a digit saves the current bays and theme into one of nine slots, a digit loads that slot, and `[` and `]` cycle the occupied ones. An empty slot leaves the board as it is and the status line says so.
+
+When the status line shows a suggestion, `a` replaces the shown bays with that desk. The key is named on that line. Enter does not swap the board. A single-bay window still starts the suggested desk in new windows.
+
+Far Desk is not a follow list. Field is the slate you follow. Far Desk shows a sourced result or schedule for a competition with no live score worth following. The guide names the competitions on it.
 
 A wider terminal shows more columns: one under 100 columns, two from 100, three from 160, four from 240. Extra rows show more items. That is how a fullscreen 4K window carries more than a 1080p window. The client does not read the monitor's pixel size.
 

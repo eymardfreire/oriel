@@ -54,6 +54,9 @@ type model struct {
 	paused       bool
 	seenPrice    map[string]string
 	flashes      map[string]time.Time
+	guidePage    int
+	guideCursor  int
+	guideScroll  int
 }
 
 func (m model) Init() tea.Cmd {
@@ -146,6 +149,11 @@ func (m model) onKey(key string) (tea.Model, tea.Cmd) {
 	case "?":
 		m.closePickers()
 		m.settings = !m.settings
+		if m.settings {
+			m.guidePage = 0
+			m.guideCursor = 0
+			m.guideScroll = 0
+		}
 		return m, nil
 	case "h":
 		if m.board && !m.settings && !m.picking() {
@@ -154,39 +162,17 @@ func (m model) onKey(key string) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 	case "f":
-		if m.saving {
-			m.saving = false
-		}
-		m.settings = false
-		m.followDigits = ""
-		m.notice = ""
-		switch m.focusedBayID() {
-		case "field":
-			m.sideline = false
-			m.briefPick = false
-			m.follows = !m.follows
-		case "sideline":
-			m.follows = false
-			m.briefPick = false
-			m.sideline = !m.sideline
-		case "brief":
-			m.follows = false
-			m.sideline = false
-			if m.briefPick {
-				m.briefPick = false
-				return m, nil
-			}
-			m.briefPick = true
-			if len(m.briefChoices()) == 0 && !m.fixture {
-				return m, fetchBriefCmd(m.server)
+		return m.openRefine()
+	case "enter":
+		if m.settings {
+			if m.board && m.guidePage == 2 && m.guideCursor >= 0 && m.guideCursor < len(m.bayIDs) {
+				m.toggleBay(m.bayIDs[m.guideCursor])
+			} else if m.board {
+				m.guidePage = 2
+				m.guideScroll = 0
 			}
 			return m, nil
-		default:
-			m.closePickers()
-			m.notice = m.focusedBayTitle() + " has nothing to choose"
 		}
-		return m, nil
-	case "enter":
 		if m.follows && m.followDigits != "" {
 			return m.commitFollow(m.followDigits, true)
 		}
@@ -199,6 +185,11 @@ func (m model) onKey(key string) (tea.Model, tea.Cmd) {
 		if m.briefPick {
 			return m.selectBrief(m.followCursor)
 		}
+		if refineHint(m.focusedBayID()) != "" {
+			return m.openRefine()
+		}
+		m.notice = "nothing to select"
+		return m, nil
 	case "p":
 		if m.settings || m.picking() {
 			break
@@ -224,18 +215,36 @@ func (m model) onKey(key string) (tea.Model, tea.Cmd) {
 			m.stepPicker(1)
 			return m, nil
 		}
-		if !m.settings && m.focus < len(m.flatPanels())-1 {
-			m.focus++
-			m.navigating = true
+		if m.settings {
+			m.stepGuide(1)
+			return m, nil
 		}
+		m.moveFocus(1, 0)
 	case "k", "up":
 		if m.picking() {
 			m.stepPicker(-1)
 			return m, nil
 		}
-		if !m.settings && m.focus > 0 {
-			m.focus--
-			m.navigating = true
+		if m.settings {
+			m.stepGuide(-1)
+			return m, nil
+		}
+		m.moveFocus(-1, 0)
+	case "left":
+		if m.settings {
+			m.stepGuidePage(-1)
+			return m, nil
+		}
+		if !m.picking() {
+			m.moveFocus(0, -1)
+		}
+	case "right":
+		if m.settings {
+			m.stepGuidePage(1)
+			return m, nil
+		}
+		if !m.picking() {
+			m.moveFocus(0, 1)
 		}
 	case "s":
 		if m.board && !m.settings && !m.picking() {
@@ -296,11 +305,142 @@ func (m model) onKey(key string) (tea.Model, tea.Cmd) {
 		if m.settings && m.board && !m.picking() && len(key) == 1 && key[0] >= '1' && key[0] <= '9' {
 			index := int(key[0] - '1')
 			if index < len(m.bayIDs) {
-				m.toggleBay(m.bayIDs[index])
+				m.guidePage = 2
+				m.guideScroll = 0
+				m.guideCursor = index
 			}
+			return m, nil
 		}
 	}
 	return m, nil
+}
+
+func (m model) openRefine() (tea.Model, tea.Cmd) {
+	if m.saving {
+		m.saving = false
+	}
+	m.settings = false
+	m.followDigits = ""
+	m.notice = ""
+	switch m.focusedBayID() {
+	case "field":
+		m.sideline = false
+		m.briefPick = false
+		m.follows = !m.follows
+	case "sideline":
+		m.follows = false
+		m.briefPick = false
+		m.sideline = !m.sideline
+	case "brief":
+		m.follows = false
+		m.sideline = false
+		if m.briefPick {
+			m.briefPick = false
+			return m, nil
+		}
+		m.briefPick = true
+		if len(m.briefChoices()) == 0 && !m.fixture {
+			return m, fetchBriefCmd(m.server)
+		}
+		return m, nil
+	default:
+		m.closePickers()
+		m.notice = m.focusedBayTitle() + " has nothing to choose"
+	}
+	return m, nil
+}
+
+func bayOrigin(views []bayView, bayIndex int) int {
+	offset := 0
+	for i := 0; i < bayIndex && i < len(views); i++ {
+		offset += panelSlots(views[i])
+	}
+	return offset
+}
+
+func (m *model) moveFocus(dRow, dCol int) {
+	n := len(m.views)
+	if n == 0 || (dRow == 0 && dCol == 0) {
+		return
+	}
+	width := m.width
+	if width < 40 {
+		width = 80
+	}
+	cols, rows := bayGrid(n, width)
+	bay := m.focusedBay()
+	if bay < 0 || bay >= n {
+		bay = 0
+	}
+	row, col := bay/cols, bay%cols
+	if dCol != 0 {
+		rowCount := cols
+		if remain := n - row*cols; remain < rowCount {
+			rowCount = remain
+		}
+		if rowCount < 1 {
+			return
+		}
+		col += dCol
+		if col < 0 {
+			col = rowCount - 1
+		} else if col >= rowCount {
+			col = 0
+		}
+	}
+	if dRow != 0 {
+		nextRow := row + dRow
+		if nextRow < 0 {
+			nextRow = rows - 1
+		} else if nextRow >= rows {
+			nextRow = 0
+		}
+		if nextRow*cols+col >= n {
+			return
+		}
+		row = nextRow
+	}
+	next := row*cols + col
+	if next < 0 || next >= n || next == bay {
+		return
+	}
+	m.focus = bayOrigin(m.views, next)
+	m.navigating = true
+}
+
+func (m *model) stepGuidePage(delta int) {
+	pages := guidePageCount(m.board)
+	if pages < 1 {
+		return
+	}
+	m.guidePage = (m.guidePage + delta%pages + pages) % pages
+	m.guideScroll = 0
+}
+
+func (m *model) stepGuide(delta int) {
+	if m.board && m.guidePage == 2 {
+		n := len(m.bayIDs)
+		if n < 1 {
+			return
+		}
+		m.guideCursor = (m.guideCursor + delta + n) % n
+		return
+	}
+	lines := guideLines(m.guidePage, m.board, m.bayIDs, m.enabled, m.guideCursor)
+	room := guideRoom(m.height) - 1
+	if room < 1 {
+		room = 1
+	}
+	maxScroll := len(lines) - room
+	if maxScroll < 0 {
+		maxScroll = 0
+	}
+	next := m.guideScroll + delta
+	if next < 0 || next > maxScroll {
+		m.stepGuidePage(delta)
+		return
+	}
+	m.guideScroll = next
 }
 
 func (m *model) cycledTheme() Theme {
@@ -576,13 +716,13 @@ func (m model) View() string {
 	}
 	var body string
 	if m.settings {
-		body = settingsView(m.theme, m.themeIDs, m.bayIDs, m.enabled, m.board, width)
+		body = guideView(m.theme, m.guidePage, m.board, m.bayIDs, m.enabled, m.guideCursor, m.guideScroll, width, m.height)
 	} else if m.follows {
-		body = followsView(m.theme, "Follows", "A number follows or unfollows that competition", m.fieldFollows(), m.followDigits, m.followCursor, width, fieldPickerStyle())
+		body = followsView(m.theme, "Follows", "A number moves to that row. enter follows or unfollows it.", m.fieldFollows(), m.followDigits, m.followCursor, width, fieldPickerStyle())
 	} else if m.sideline {
-		body = followsView(m.theme, "Sideline", "A number keeps or drops that sport. Most relevant is every sport.", m.sidelineChoices(), m.followDigits, m.followCursor, width, fieldPickerStyle())
+		body = followsView(m.theme, "Sideline", "A number moves to that row. enter keeps or drops that sport. Most relevant is every sport.", m.sidelineChoices(), m.followDigits, m.followCursor, width, fieldPickerStyle())
 	} else if m.briefPick {
-		body = followsView(m.theme, "Brief", "A number selects that row. The first row of each section is the default.", m.briefChoices(), m.followDigits, m.followCursor, width, briefPickerStyle())
+		body = followsView(m.theme, "Brief", "A number moves to that row. enter selects it. The first row of each section is the default.", m.briefChoices(), m.followDigits, m.followCursor, width, briefPickerStyle())
 	} else {
 		body = renderBoard(m.views, m.theme, width, m.height, m.focus, m.seconds, m.now, m.flashes)
 	}

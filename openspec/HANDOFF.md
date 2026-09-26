@@ -6,9 +6,13 @@ Read this first. Do not reopen product decisions that this file marks as locked 
 
 The operator is staying on this Windows machine for now. A Linux move is later. Do not port, repackage, or rewrite paths for Linux. Do not commit or push. Do not archive anything until the operator agrees. Archive `live-board` first, then `bay-universes`, then `fit-the-screen`.
 
-`go run . -board` is the way they launch, and they said on 25 September 2026 that it is already right. Do not change that command or the board grid. A window whose status line has no `h home` and whose settings screen has no bay numbers is a single bay (`-bay`), not a broken board. Close that window. The board status line shows `h home` and the current slot.
+`go run . -board` is the way they launch, and they said on 25 September 2026 that it is already right. Do not change that command or the board grid. A window whose status line has no `h home` is a single bay (`-bay`), not a broken board. Close that window. The board status line shows `h home` and the current slot.
 
-On the night of 25 September 2026 the operator asked to finish navigation. `refine-the-bay` is implemented and uncommitted. Do not archive it until they agree. Do not redo the passes below. They had just looked at the eight-bay board and accepted the middle-cell fix. The screenshot they sent with the note is Brief beside Far Desk.
+On the night of 25 September 2026 the operator asked to finish navigation. `refine-the-bay` is in `1dc39e6`. Do not archive it until they agree. Do not redo the passes below. They had just looked at the eight-bay board and accepted the middle-cell fix. The screenshot they sent with the note is Brief beside Far Desk.
+
+Later that night they asked for a guide and a pass over the status keys. `?` opens the guide. The first page is the keys. The second page says what each bay is and where it is set up, including Far Desk: it is not a follow list. Field is the slate you follow. Far Desk is a sourced result or schedule for a competition that has no live score worth following. The two on it are 3. Liga and the Nippon Baseball League. On a board the third page lists the bays. `j` and `k` move on that page, a number jumps, and `enter` shows or hides the row. Do not redo this.
+
+`j` moves to the bay below and `k` to the bay above. Left and right move across the row. The old pair walked left to right through panels, which is why they felt inverted on the two-row board. `enter` opens the focused bay's list when it has one (Field, Sideline, Brief). In a list, a number only moves to that row and `enter` selects it. `a` is not on the key bar. It still swaps the board when a suggestion is showing, and the suggestion line still says to press `a`. `enter` does not swap the board. Restart the client after this change. The server did not change.
 
 `f` refines the focused bay. Field opens follows, Sideline opens sports, and Brief opens place, outlet, and market family. The status hint names that action and omits `f` when the bay has nothing to choose. Pressing `f` on Far Desk, Wires, Markets, Storm, Trade, or Fantasy says that bay has nothing to choose. Brief's choice is `catalog/brief/selection.json`. Empty means Tampa, the first live headline, and the first live quote. A chosen place is not marked home.
 
@@ -55,7 +59,7 @@ Verified after Sideline and the standings split: `go test ./...` in `client/` pa
 
 - Folder: `F:\MaxMax\DB\Oriel`
 - Remote: `https://github.com/eymardfreire/oriel` (public)
-- Branch: `main`. Last pushed commit: `1a57843` (foundation). `bay-universes`, `fit-the-screen`, the field expansion, Sideline, per-league standings, `finish-markets`, the 25 September markets fill, and the same-night layout fixes are implemented and uncommitted. Do not commit or push unless the operator asks.
+- Branch: `main`. `1dc39e6` shipped the live board and the bays filled in since the foundation. The guide and the key pass (`j` down, `k` up, enter selects, `?` opens the guide) are the commit after that. Do not commit or push unless the operator asks.
 - Git config has no `user.name` or `user.email`. Do not update git config.
 - Foundation archive: `openspec/changes/archive/2026-09-24-establish-oriel-foundation/`
 
