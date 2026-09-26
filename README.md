@@ -2,28 +2,35 @@
 
 Oriel is a modular terminal desk for the world. One server gathers markets, trade, news, weather, and sports. Each terminal window is a bay, and you decide what that bay shows.
 
-The name comes from an oriel window: a bay that projects outward so you can look in more than one direction at once.
+The name comes from an oriel window: a bay that projects outward so you can look in more than one direction at once. A board is that window with several bays in it. A desk is a named set of bays.
 
 ## Status
 
-The server answers `/health` and polls wires, markets, trade, weather, and sports. The client opens one bay. The wires, markets, trade, storm, field, far, and fantasy bays read live panels from the server. Brief keeps its fixture wire and quote. It swaps in the home observation only after that place has coordinates. Weather news stays on the storm desk.
+The server answers `/health` and polls wires, markets, trade, weather, weather news, and sports. The client you run is a board, one window of the bays you choose:
 
-- Change: `openspec/changes/establish-oriel-foundation/`
-- Handoff: `openspec/HANDOFF.md`
+```powershell
+go run . -board
+```
+
+`-bay` is a single bay. `-desk` starts one process per bay and does not tile windows. Press `?` for the guide.
+
+Wires, markets, trade, storm, field, sideline, far, and fantasy read live panels from the server. Brief is one place, one headline, and one quote, taken from those feeds. With nothing chosen, that is Tampa, the first live headline, and the first live quote. If the server is down, a bay keeps its fixture.
+
+Operator notes are in `openspec/HANDOFF.md`. The foundation change is archived at `openspec/changes/archive/2026-09-24-establish-oriel-foundation/`.
 
 ## Shape
 
 | Piece | Where it runs | Role |
 | --- | --- | --- |
-| Server | Omarch machine | Fetch, cache, and serve every domain. Today it serves health, wires, markets, trade, weather, and sports. |
-| Client | Any terminal | One process, one window, one bay |
+| Server | The machine that polls | Fetch, cache, and serve every domain: health, wires, markets, trade, weather, weather news, and sports. |
+| Client | Any terminal | One process and one window. `-board` shows several bays. `-bay` shows one. `-desk` starts one process per bay. |
 | Contracts | `contracts/` | Panel, bay, desk, wire-outlet, market, and trade JSON schemas |
 | Catalog | `catalog/` | Themes, shipped desks, wire outlets, market sources, trade sources, and sports |
 | Fixtures | `fixtures/` | Sample panels marked `fixture: true` |
 
 ## Run the server
 
-From `server/`, with Python 3.12:
+From `server/`, with Python 3.12. If `py` is not installed, use the Python that created the venv.
 
 ```powershell
 py -3.12 -m venv .venv
@@ -40,11 +47,12 @@ Invoke-RestMethod http://127.0.0.1:8787/bays/markets
 Invoke-RestMethod http://127.0.0.1:8787/bays/trade
 Invoke-RestMethod http://127.0.0.1:8787/bays/storm
 Invoke-RestMethod http://127.0.0.1:8787/bays/field
+Invoke-RestMethod http://127.0.0.1:8787/bays/sideline
 Invoke-RestMethod http://127.0.0.1:8787/bays/far
 Invoke-RestMethod http://127.0.0.1:8787/bays/fantasy
 ```
 
-`home_place` is the primary home. The shipped place is Tampa, Florida (`27.94752`, `-82.45843`), from the Open-Meteo geocoder. Edit that block to move it. Add more homes, or a place you watch that is not a home, in `catalog/weather/places.json`. A row with `"home": true` is another home. `"home": false` is watched on the storm desk only. Brief shows every home and leaves the others off that window.
+`home_place` is the primary home. The shipped place is Tampa, Florida (`27.94752`, `-82.45843`), from the Open-Meteo geocoder. Edit that block to move it. Add more homes, or a place you watch that is not a home, in `catalog/weather/places.json`. A row with `"home": true` is another home. `"home": false` is watched on the storm desk only. Brief shows the home place unless you choose another, and choosing one does not mark it home.
 
 `[wires]` sets `enabled`, `refresh_seconds` (default 120), and `stale_after_seconds` (default 900). A failed refresh keeps the last good headlines and marks the panel stale. Each outlet's last successful fetch is recorded in `server/state/wires.json`, which is local state, not part of the catalog.
 
@@ -76,6 +84,7 @@ go run . -bay storm -fixture
 go run . -bay field
 go run . -bay field -fixture
 go run . -bay far
+go run . -bay sideline
 go run . -bay fantasy
 go run . -bay fantasy -fixture
 go run . -board
@@ -97,13 +106,23 @@ When the status line shows a suggestion, `a` replaces the shown bays with that d
 
 Far Desk is not a follow list. Field is the slate you follow. Far Desk shows a sourced result or schedule for a competition with no live score worth following. The guide names the competitions on it.
 
-A wider terminal shows more columns: one under 100 columns, two from 100, three from 160, four from 240. Extra rows show more items. That is how a fullscreen 4K window carries more than a 1080p window. The client does not read the monitor's pixel size.
+The client asks `http://127.0.0.1:8787` for live panels. Pass `-server` if the server is on another host. If that server cannot be reached, the bay shows its fixture and prints a line on stderr. `-fixture` skips the server. A reachable server that returns no rows stays empty. The client never calls an outlet, a market source, a trade feed, a weather service, or a sports feed.
 
-`wires` asks `http://127.0.0.1:8787` for live desk panels, one panel per desk, eight newest headlines each. `markets` asks the same server for one quote panel per enabled family. `trade` asks for one headline panel per enabled family. `storm` asks for observation, forecast, alerts, and weather news as separate panels. Pass `-server` if the aggregation service is on another host. If that server cannot be reached, the bay shows its fixture instead and prints a line on stderr. `-fixture` skips the server. A reachable server that returns no rows stays empty; it does not fill in fixture text. The client never calls an outlet, a market source, a trade feed, a weather service, or a sports feed.
+## Bays
 
-Bays: `brief`, `wires`, `markets`, `field`, `storm`, `trade`, `far`, `fantasy`. `three` is a desk of three bays, not a bay. This client opens one window. It does not start the other bays. The wires, markets, trade, and storm bays call the server. Brief asks only for the home observation, and only uses it when that place is configured. The others render fixtures and do not call upstream sources.
+| Bay | What you see | Where you set it up |
+| --- | --- | --- |
+| Brief | One place, one headline, and one quote. Unset: Tampa, the first live headline, and the first live quote. | `enter` or `f`. Saved in `catalog/brief/selection.json`. A chosen place is not marked home. |
+| Wires | Headlines | `catalog/outlets/`, one file each, with `enabled` |
+| Markets | Quotes by family | `catalog/markets/selection.json` |
+| Trade | Freight, customs, and the supply chain | `catalog/trade/selection.json` |
+| Storm | Watched cities, alerts, and weather news | `catalog/weather/places.json`, plus the home block in `server/config.toml` |
+| Field | Scores for the competitions you follow | `enter` or `f`. Saved in `catalog/sports/follows.json` |
+| Sideline | Sports news. Unset: the newest headline from each sport. | `enter` or `f` |
+| Far Desk | A sourced result or schedule. The two shipped leagues are 3. Liga and the Nippon Baseball League. | No list in the client. The catalog tier is `far`. |
+| Fantasy | An NFL pin strip, lineup, and bench | `catalog/sports/roster.json` and the routes below. The client has no key for it. |
 
-`brief` shows one observation, one headline, and one quote. With nothing chosen, that is the home place, the first live headline, and the first live quote. Press `f` on the brief bay to choose a place, a wire outlet, or a market family. The choice is `catalog/brief/selection.json`. A chosen place is not marked home. A place with no observation keeps the previous weather row, and a missing price stays blank. `field`, `far`, and `fantasy` read the server. `-fixture`, or a server that cannot be reached, keeps the field and fantasy fixtures. `far` has no fixture panels, so that fallback shows an empty state that names the domain. `storm` falls back to sample observation, forecast, alert, and weather-news panels when the server is down.
+`three` is a desk of wires, markets, and field, not a bay. A narrow Brief stacks its three parts. A wide one keeps them in a strip. Far Desk has no fixture rows, so a missing server names the empty state. Storm falls back to sample observation, forecast, alert, and weather-news panels when the server is down. A place with no observation keeps the previous weather row, and a missing price stays blank.
 
 ## Outlets
 
@@ -130,7 +149,7 @@ Checked on 25 September 2026, still on those sources: Russell 2000, CBOE VIX, CA
 
 Later on 25 September 2026 the same chart endpoint added the leading listings on the other major boards, and a funds section. Equities stays the US tape and now also includes AMD, Netflix, Oracle, the TSMC ADR, and Goldman Sachs. It is not split into a NYSE list and a Nasdaq list. The exchange index stays in Indices: Ibovespa, the Shanghai Composite, the FTSE 100, and the rest were already there. London is Shell, AstraZeneca, HSBC, Unilever, BP, Rio Tinto, GSK, and RELX, in pence. Europe is LVMH, L'Oreal, TotalEnergies, Airbus, SAP, Siemens, Allianz, ASML, Nestle, and Novartis. Roche (`ROG.SW`) returned 404 and was left out. Tokyo is Toyota, Sony, SoftBank, Keyence, Mitsubishi UFJ, Tokyo Electron, and Fast Retailing. Hong Kong is Tencent, Alibaba, Meituan, Xiaomi, AIA, China Construction Bank, and HSBC. China is the mainland cash names: Kweichow Moutai, Ping An, China Merchants Bank, and ICBC in Shanghai, plus CATL and BYD in Shenzhen. India is Reliance, Tata Consultancy Services, HDFC Bank, Infosys, ICICI Bank, and Bharti Airtel. Brazil is Petrobras, Vale, Itau, Bradesco, Ambev, and WEG. Canada is Royal Bank of Canada, Toronto-Dominion, Shopify, and Enbridge. Korea is Samsung Electronics, SK Hynix, and Hyundai Motor. Taiwan is the local TSMC line, Hon Hai, and MediaTek. Australia is BHP, Commonwealth Bank, and CSL. Funds are the US-listed ETFs SPY, QQQ, IWM, DIA, VTI, EFA, EEM, EWJ, FXI, EWZ, INDA, VGK, GLD, and IBIT. Each fund title records the venue. The quote line still prints the symbol.
 
-Each quote row shows the symbol, price, source, and a delayed marker. A positive change uses the theme `up` role and a negative change uses `down`. If the source did not send a price, the row shows the symbol only. If it sent a price and no change, the change cell stays empty.
+Each quote row shows the symbol, price, source, and a delayed marker. A positive change uses the theme `up` role and a negative change uses `down`. If the source did not send a price, the row shows the symbol only. If it sent a price and no change, the change cell stays empty. When a later refresh prints a new price, the symbol and the price use the accent color for two seconds. The first print does not flash. An unchanged price does not flash again.
 
 ## Trade
 
@@ -151,7 +170,7 @@ The operator's list is `catalog/trade/selection.json`. Set a family's `"enabled"
 
 Weather uses Open-Meteo for the observation and the forecast, and the National Weather Service for active alerts. Both are public and need no API key. A place is fetched only when it has coordinates.
 
-The primary home is `[home_place]` in `server/config.toml`. Further places are a list in `catalog/weather/places.json`. Each one needs an id, a name, a latitude, a longitude, `"home"`, a region, and `alerts` (`nws` or `none`). Set `"home": true` for another home, or `false` for a place that belongs on the storm desk only. Brief shows every home. The shipped watch list, added 24 September 2026, is about 40 cities across North America, South America, Europe, Africa, the Middle East, Asia, and Oceania, all with `"home": false`. Open-Meteo is requested once for the whole list. The National Weather Service covers United States places only. Everywhere else the alert row says no public alert source covers that place. The storm bay groups observations by region and leads with the hottest, coldest, wettest, and windiest watched places that actually reported that measure.
+The primary home is `[home_place]` in `server/config.toml`. Further places are a list in `catalog/weather/places.json`. Each one needs an id, a name, a latitude, a longitude, `"home"`, a region, and `alerts` (`nws` or `none`). Set `"home": true` for another home, or `false` for a place that belongs on the storm desk only. Brief shows one place: the home, unless you choose another. Storm still watches every place. The shipped watch list, added 24 September 2026, is about 40 cities across North America, South America, Europe, Africa, the Middle East, Asia, and Oceania, all with `"home": false`. Open-Meteo is requested once for the whole list. The National Weather Service covers United States places only. Everywhere else the alert row says no public alert source covers that place. The storm bay groups observations by region and leads with the hottest, coldest, wettest, and windiest watched places that actually reported that measure.
 
 Weather news is a separate feed in `catalog/weather-news/`. The shipped outlets, checked on 23 September 2026, are the National Hurricane Center Atlantic outlook and the Storm Prediction Center. Checked again on 24 September 2026: both feeds answered, and both include a description, which is stored as `summary` and shown only when the storm bay is at full detail. Set `"enabled": false` on an outlet to stop fetching it. Those stories appear on the storm desk only. Brief does not show them.
 
@@ -183,9 +202,9 @@ Sports competitions are `catalog/sports/competitions.json`. Each entry has one c
 
 ESPN's scoreboard returned 403. TheSportsDB's free feed is one past event and one upcoming event, not a full slate. Argentine football and rugby union were left out after a 429. OpenLigaDB scheduled rows are limited to the next 14 days so a 380-match season does not fill the bay. A minute clock is shown only when the source sent one.
 
-Follows are `catalog/sports/follows.json`. Put a competition id in `competitions`, a family such as `baseball` in `sports`, or a competitor name in `competitors`. An empty file shows "Choose follows" and does not fetch scores. On the field bay, `f` opens a picker. `j` and `k` move the row, and enter toggles it. A number jumps to that row. When the number could still grow into 10 or above, it waits, and enter toggles the row it already names. League names are the full name, and each row carries that sport's ball. The follows file is not the fantasy roster and not a bay pin. After a follow is saved, the next field refresh fetches that competition and, when that source publishes a table, the season standings. An id that is not in the competition catalog is rejected and the follows file stays as it was. `f` follows the focused bay. The status hint says `f follows`, `f sports`, or `f brief`, and it omits `f` when that bay has nothing to choose.
+Follows are `catalog/sports/follows.json`. Put a competition id in `competitions`, a family such as `baseball` in `sports`, or a competitor name in `competitors`. An empty file shows "Choose follows" and does not fetch scores. On the field bay, `enter` or `f` opens the list. `j` and `k` move, a number jumps to that row, and enter follows or drops it. League names are the full name, and each row carries that sport's ball. The follows file is not the fantasy roster and not a bay pin. After a follow is saved, the next field refresh fetches that competition and, when that source publishes a table, the season standings. An id that is not in the competition catalog is rejected and the follows file stays as it was. The status hint says `f follows`, `f sports`, or `f brief`, and it omits `f` when that bay has nothing to choose.
 
-Sideline is the sports-news bay. Turn it on from settings. `f` on that bay refines the sports. With nothing chosen, the bay shows the newest headline from each sport. Choosing a sport keeps only that sport. Cricket and rugby union are headlines here: their score feeds did not answer on 24 September 2026. The feeds that did are BBC Sport (football, cricket, rugby union, rugby league, Formula 1, tennis) and The Guardian (cricket, rugby union).
+Sideline is the sports-news bay. Show it from the last page of the guide on a board. `enter` or `f` on that bay picks the sports. With nothing chosen, the bay shows the newest headline from each sport. Choosing a sport keeps only that sport. Cricket and rugby union are headlines here: their score feeds did not answer on 24 September 2026. The feeds that did are BBC Sport (football, cricket, rugby union, rugby league, Formula 1, tennis) and The Guardian (cricket, rugby union).
 
 ```powershell
 Invoke-RestMethod http://127.0.0.1:8787/bays/field/follows -Method Post -ContentType application/json -Body '{"competition_id":"mlb","follow":true}'
@@ -246,11 +265,12 @@ Files in `fixtures/` are canned panels so a bay can render before a poller exist
 
 ## Domains
 
-Markets, trade, wires (news), weather, weather news, and sports. Sports includes a Far Desk for competitions that only have public results or reports, and a separate NFL fantasy window where you select a lineup and pin players to watch. A situation domain is reserved and is not part of the first build.
+Markets, trade, wires (news), weather, weather news, and sports. Sports includes Field, Sideline, a Far Desk for competitions that only have public results or reports, and a separate NFL fantasy window where you select a lineup and pin players to watch. A situation domain is reserved and is not built.
 
 ## Work from the spec
 
+The foundation change is archived. Later work is in `openspec/changes/`, and the operator notes are in `openspec/HANDOFF.md`.
+
 ```powershell
-openspec show establish-oriel-foundation
-openspec validate establish-oriel-foundation --strict
+openspec validate --all --strict
 ```
