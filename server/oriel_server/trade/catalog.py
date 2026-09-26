@@ -30,28 +30,35 @@ class FamilySelection:
     enabled: bool
 
 
-def load_sources(path: Path) -> dict[str, Source]:
+def load_sources(path: Path) -> dict[str, tuple[Source, ...]]:
     raw = _object(path)
     _exact_families(raw, path)
-    sources: dict[str, Source] = {}
+    sources: dict[str, tuple[Source, ...]] = {}
     for family in FAMILIES:
         body = raw[family]
-        if not isinstance(body, dict):
-            raise ValueError(f"{path}: {family} must be an object")
-        allowed = {"id", "name", "fetch", "note"}
-        extra = set(body) - allowed
-        if extra:
-            raise ValueError(f"{path}: {family} has unknown fields {', '.join(sorted(extra))}")
-        source_id = _text(body.get("id"), path, f"{family}.id")
-        if not _ID.fullmatch(source_id):
-            raise ValueError(f"{path}: {family}.id must be lowercase words separated by hyphens")
-        sources[family] = Source(
-            id=source_id,
-            name=_text(body.get("name"), path, f"{family}.name"),
-            fetch=_fetch_url(body.get("fetch"), path, family),
-            note=_text(body.get("note"), path, f"{family}.note"),
-        )
+        rows = body if isinstance(body, list) else [body]
+        if not rows or not all(isinstance(row, dict) for row in rows):
+            raise ValueError(f"{path}: {family} must be a source or a list of sources")
+        parsed = tuple(_source(row, path, family, index) for index, row in enumerate(rows))
+        sources[family] = parsed
     return sources
+
+
+def _source(body: dict, path: Path, family: str, index: int) -> Source:
+    label = family if index == 0 else f"{family}[{index}]"
+    allowed = {"id", "name", "fetch", "note"}
+    extra = set(body) - allowed
+    if extra:
+        raise ValueError(f"{path}: {label} has unknown fields {', '.join(sorted(extra))}")
+    source_id = _text(body.get("id"), path, f"{label}.id")
+    if not _ID.fullmatch(source_id):
+        raise ValueError(f"{path}: {label}.id must be lowercase words separated by hyphens")
+    return Source(
+        id=source_id,
+        name=_text(body.get("name"), path, f"{label}.name"),
+        fetch=_fetch_url(body.get("fetch"), path, label),
+        note=_text(body.get("note"), path, f"{label}.note"),
+    )
 
 
 def load_selection(path: Path) -> dict[str, FamilySelection]:
@@ -93,9 +100,9 @@ def _text(value: object, path: Path, field: str) -> str:
     return value.strip()
 
 
-def _fetch_url(value: object, path: Path, family: str) -> str:
-    url = _text(value, path, f"{family}.fetch")
+def _fetch_url(value: object, path: Path, label: str) -> str:
+    url = _text(value, path, f"{label}.fetch")
     parsed = urlparse(url)
     if parsed.scheme not in {"http", "https"} or not parsed.netloc:
-        raise ValueError(f"{path}: {family}.fetch must be an http(s) URL")
+        raise ValueError(f"{path}: {label}.fetch must be an http(s) URL")
     return url

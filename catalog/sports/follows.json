@@ -1,5 +1,8 @@
 {
-  "competitions": [],
+  "competitions": [
+    "cfl",
+    "mlb"
+  ],
   "sports": [],
   "competitors": []
 }

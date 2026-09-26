@@ -24,9 +24,11 @@ from oriel_server.markets.catalog import (
 )
 from oriel_server.markets.quotes import (
     Quote,
+    coingecko_markets_url,
     coingecko_url,
     frankfurter_url,
     parse_coingecko,
+    parse_coingecko_markets,
     parse_frankfurter,
     parse_treasury,
     parse_yahoo,
@@ -97,9 +99,15 @@ class MarketPoller:
             return
         now = self._now()
         fetched: dict[str, tuple[dict[str, Quote], str]] = {}
+        ranked: dict[str, tuple[Instrument, ...]] = {}
         for family in FAMILIES:
             chosen = selection[family]
             if not chosen.enabled or not chosen.instruments:
+                continue
+            if sources[family].kind == "coingecko" and chosen.top:
+                quotes, instruments, error = self._fetch_top_crypto(sources[family], chosen, now)
+                fetched[family] = (quotes, error)
+                ranked[family] = instruments
                 continue
             fetched[family] = self._fetch_family(family, sources[family], chosen, now)
         with self._lock:
@@ -117,10 +125,12 @@ class MarketPoller:
                     panel["stale_reason"] = error
                     stored[family] = StoredPanel(panel, previous.updated_at)
                     continue
+                shown = ranked.get(family) or selection[family].instruments
                 items = [
                     _item(family, quotes[instrument.symbol])
-                    for instrument in selection[family].instruments
                     if instrument.symbol in quotes
+                    else _missing_item(family, instrument, now)
+                    for instrument in shown
                 ]
                 stored[family] = StoredPanel(
                     _panel(family, now, bool(error), error, items),
@@ -222,6 +232,28 @@ class MarketPoller:
     ) -> tuple[dict[str, Quote], str]:
         payload = self._fetcher(treasury_url(now.astimezone(timezone.utc).year))
         return parse_treasury(payload, list(chosen.instruments), source=source.name, delayed=source.delayed), ""
+
+    def _fetch_top_crypto(
+        self,
+        source: Source,
+        chosen: FamilySelection,
+        now: datetime,
+    ) -> tuple[dict[str, Quote], tuple[Instrument, ...], str]:
+        observed = now.astimezone(timezone.utc).replace(microsecond=0)
+        try:
+            payload = self._fetcher(coingecko_markets_url(chosen.top))
+            pairs = parse_coingecko_markets(
+                payload,
+                source=source.name,
+                delayed=source.delayed,
+                observed_at=observed,
+                limit=chosen.top,
+            )
+        except Exception as exc:
+            logger.warning("markets %s: %s", source.id, exc)
+            quotes, error = self._fetch_coingecko(source, chosen, now)
+            return quotes, tuple(chosen.instruments), error or short_error(exc)
+        return {quote.symbol: quote for _, quote in pairs}, tuple(item for item, _ in pairs), ""
 
     def _fetch_coingecko(
         self,
@@ -330,6 +362,18 @@ def _panel(family: str, updated_at: datetime, stale: bool, reason: str, items: l
         "stale": stale,
         "stale_reason": reason if stale else "",
         "items": items,
+    }
+
+
+def _missing_item(family: str, instrument: Instrument, now: datetime) -> dict:
+    return {
+        "id": f"{family}:{instrument.symbol}",
+        "title": instrument.title,
+        "source": "",
+        "source_url": "",
+        "observed_at": _iso(now),
+        "row": "quote",
+        "fields": {"symbol": instrument.symbol},
     }
 
 

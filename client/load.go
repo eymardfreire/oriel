@@ -51,8 +51,9 @@ type Panel struct {
 	UpdatedAt   string `json:"updated_at"`
 	Stale       bool   `json:"stale"`
 	StaleReason string `json:"stale_reason"`
-	Fixture     bool   `json:"fixture"`
-	Items       []Item `json:"items"`
+	Fixture        bool   `json:"fixture"`
+	RefreshSeconds int    `json:"refresh_seconds,omitempty"`
+	Items          []Item `json:"items"`
 }
 
 type Item struct {

@@ -69,14 +69,92 @@ def test_shipped_sources_are_the_verified_delayed_boards() -> None:
     assert set(sources) == set(FAMILIES)
     assert {family: sources[family].id for family in FAMILIES} == {
         "indices": "yahoo-chart",
+        "sectors": "yahoo-chart",
         "equities": "yahoo-chart",
+        "london": "yahoo-chart",
+        "europe": "yahoo-chart",
+        "tokyo": "yahoo-chart",
+        "hongkong": "yahoo-chart",
+        "china": "yahoo-chart",
+        "india": "yahoo-chart",
+        "brazil": "yahoo-chart",
+        "canada": "yahoo-chart",
+        "korea": "yahoo-chart",
+        "taiwan": "yahoo-chart",
+        "australia": "yahoo-chart",
+        "funds": "yahoo-chart",
         "fx": "frankfurter",
         "rates": "us-treasury",
+        "bonds": "yahoo-chart",
         "commodities": "yahoo-chart",
         "crypto": "coingecko",
     }
     assert all(source.delayed for source in sources.values())
-    assert [item.symbol for item in selection["fx"].instruments] == ["EURUSD", "USDJPY"]
+    assert [item.symbol for item in selection["indices"].instruments] == [
+        "SPX", "DJI", "NDX", "RUT", "VIX", "FTSE", "DAX", "CAC", "SX5E",
+        "N225", "HSI", "SSEC", "KS11", "AXJO", "SENSEX", "TSX", "BVSP",
+    ]
+    assert selection["indices"].instruments[11].query == "000001.SS"
+    assert all(item.query != "^SSEC" for item in selection["indices"].instruments)
+    assert [item.symbol for item in selection["sectors"].instruments] == [
+        "XLK", "XLF", "XLE", "XLV", "XLY", "XLP", "XLI", "XLB", "XLRE", "XLU", "XLC",
+        "XBI", "XHB", "XRT", "XME", "XOP", "KRE", "KBE", "XSD", "XAR", "XPH",
+        "XTN", "XSW", "XHE", "XHS", "KIE", "XES",
+    ]
+    assert [item.symbol for item in selection["equities"].instruments] == [
+        "AAPL", "MSFT", "NVDA", "AMZN", "GOOGL", "META", "AVGO", "TSLA",
+        "AMD", "NFLX", "ORCL", "TSM", "BRK.B", "LLY", "JPM", "V", "UNH",
+        "XOM", "MA", "JNJ", "COST", "HD", "PG", "BAC", "GS", "WMT",
+    ]
+    assert [item.symbol for item in selection["london"].instruments] == [
+        "SHEL", "AZN", "HSBA", "ULVR", "BP", "RIO", "GSK", "RELX",
+    ]
+    assert [item.symbol for item in selection["europe"].instruments] == [
+        "LVMH", "LOREAL", "TOTAL", "AIRBUS", "SAP", "SIEMENS", "ALLIANZ", "ASML", "NESN", "NOVN",
+    ]
+    assert all(item.query != "ROG.SW" for item in selection["europe"].instruments)
+    assert [item.symbol for item in selection["tokyo"].instruments] == [
+        "TOYOTA", "SONY", "SOFTBANK", "KEYENCE", "MUFG", "TEL", "UNIQLO",
+    ]
+    assert [item.symbol for item in selection["hongkong"].instruments] == [
+        "TENCENT", "BABA", "MEITUAN", "XIAOMI", "AIA", "CCB", "HSBC",
+    ]
+    assert [item.symbol for item in selection["china"].instruments] == [
+        "MOUTAI", "PINGAN", "CMB", "ICBC", "CATL", "BYD",
+    ]
+    assert selection["china"].instruments[4].query == "300750.SZ"
+    assert [item.symbol for item in selection["india"].instruments] == [
+        "RELIANCE", "TCS", "HDFC", "INFY", "ICICI", "AIRTEL",
+    ]
+    assert [item.symbol for item in selection["brazil"].instruments] == [
+        "PETR4", "VALE3", "ITUB4", "BBDC4", "ABEV3", "WEGE3",
+    ]
+    assert [item.symbol for item in selection["canada"].instruments] == ["RY", "TD", "SHOP", "ENB"]
+    assert [item.symbol for item in selection["korea"].instruments] == ["SAMSUNG", "HYNIX", "HYUNDAI"]
+    assert [item.symbol for item in selection["taiwan"].instruments] == ["TSMC", "HONHAI", "MEDIATEK"]
+    assert selection["taiwan"].instruments[0].query == "2330.TW"
+    assert selection["equities"].instruments[11].query == "TSM"
+    assert [item.symbol for item in selection["australia"].instruments] == ["BHP", "CBA", "CSL"]
+    assert [item.symbol for item in selection["funds"].instruments] == [
+        "SPY", "QQQ", "IWM", "DIA", "VTI", "EFA", "EEM", "EWJ", "FXI", "EWZ", "INDA", "VGK", "GLD", "IBIT",
+    ]
+    assert selection["funds"].instruments[0].title == "S&P 500, NYSE Arca"
+    assert selection["funds"].instruments[1].title == "Nasdaq 100, Nasdaq"
+    assert [item.symbol for item in selection["fx"].instruments] == [
+        "EURUSD", "USDJPY", "GBPUSD", "USDCHF", "AUDUSD", "NZDUSD", "USDCAD",
+        "USDSEK", "USDCNY", "USDHKD", "USDSGD", "USDINR", "USDKRW", "USDMXN",
+        "USDBRL", "USDZAR", "EURGBP", "EURJPY",
+    ]
+    assert [item.symbol for item in selection["rates"].instruments] == [
+        "US1M", "US3M", "US6M", "US1Y", "US2Y", "US3Y", "US5Y", "US7Y", "US10Y", "US20Y", "US30Y",
+    ]
+    assert [item.symbol for item in selection["bonds"].instruments] == ["SHY", "IEF", "TLT", "LQD", "HYG", "EMB", "TIP"]
+    assert [item.symbol for item in selection["commodities"].instruments] == [
+        "XAU", "XAG", "XPT", "XPD", "HG", "WTI", "BRENT", "HO", "RB", "NG",
+        "WHEAT", "CORN", "SOY", "KC", "SB", "CT",
+    ]
+    assert selection["crypto"].top == 48
+    assert [item.query for item in selection["crypto"].instruments] == ["bitcoin", "ethereum", "solana", "ripple"]
     assert selection["crypto"].instruments[0].query == "bitcoin"
     assert all(source.id != "fred" for source in sources.values())
 
@@ -159,7 +237,8 @@ def test_failure_without_a_last_price_invents_nothing(tmp_path: Path) -> None:
     poller = MarketPoller(tmp_path, fetcher=fetch, now=lambda: WHEN)
     poller.refresh()
     panel = poller.panel("markets-fx")
-    assert panel["items"] == []
+    assert [item["fields"]["symbol"] for item in panel["items"]]
+    assert all("price" not in item["fields"] and "change" not in item["fields"] for item in panel["items"])
     assert panel["stale"] is True
     assert "1.1411" not in json.dumps(panel)
 
@@ -183,6 +262,33 @@ def test_crypto_change_comes_from_the_source_percent_and_ignores_extra_coins(tmp
     assert item["fields"]["change"] == -11.11
     assert item["fields"]["delayed"] is True
     assert len(poller.panel("markets-crypto")["items"]) == 1
+
+
+def test_crypto_top_uses_the_market_cap_list_and_stops_at_the_cap(tmp_path: Path) -> None:
+    write_markets(tmp_path, fx=False)
+    selection = json.loads((tmp_path / "selection.json").read_text(encoding="utf-8"))
+    selection["crypto"]["top"] = 2
+    (tmp_path / "selection.json").write_text(json.dumps(selection), encoding="utf-8")
+    payload = json.dumps(
+        [
+            {"id": "bitcoin", "symbol": "btc", "name": "Bitcoin", "current_price": 100, "price_change_24h": -1.5},
+            {"id": "ethereum", "symbol": "eth", "name": "Ethereum", "current_price": 50, "price_change_24h": 2},
+            {"id": "dogecoin", "symbol": "doge", "name": "Dogecoin", "current_price": 1, "price_change_24h": 0.1},
+        ]
+    ).encode()
+
+    def fetch(url: str) -> bytes:
+        assert "coins/markets" in url
+        assert "per_page=2" in url
+        return payload
+
+    poller = MarketPoller(tmp_path, fetcher=fetch, now=lambda: WHEN)
+    poller.refresh()
+    items = poller.panel("markets-crypto")["items"]
+    assert [item["fields"]["symbol"] for item in items] == ["BTC", "ETH"]
+    assert items[0]["fields"]["price"] == 100
+    assert items[0]["fields"]["change"] == -1.5
+    assert "score" not in items[0]["fields"]
 
 
 def test_markets_route_returns_only_selected_families(tmp_path: Path) -> None:

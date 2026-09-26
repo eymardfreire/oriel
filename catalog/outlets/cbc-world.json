@@ -1,0 +1,9 @@
+{
+  "id": "cbc-world",
+  "name": "CBC News",
+  "fetch": "https://www.cbc.ca/webfeed/rss/rss-world",
+  "language": "en",
+  "region": "americas",
+  "desks": ["world"],
+  "enabled": true
+}

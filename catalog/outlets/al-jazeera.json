@@ -1,0 +1,9 @@
+{
+  "id": "al-jazeera",
+  "name": "Al Jazeera",
+  "fetch": "https://www.aljazeera.com/xml/rss/all.xml",
+  "language": "en",
+  "region": "world",
+  "desks": ["world"],
+  "enabled": true
+}

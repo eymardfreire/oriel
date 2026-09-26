@@ -7,11 +7,21 @@
   "additionalProperties": false,
   "required": ["policy", "freight", "supply-chain"],
   "properties": {
-    "policy": { "$ref": "#/$defs/source" },
-    "freight": { "$ref": "#/$defs/source" },
-    "supply-chain": { "$ref": "#/$defs/source" }
+    "policy": { "$ref": "#/$defs/sources" },
+    "freight": { "$ref": "#/$defs/sources" },
+    "supply-chain": { "$ref": "#/$defs/sources" }
   },
   "$defs": {
+    "sources": {
+      "oneOf": [
+        { "$ref": "#/$defs/source" },
+        {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/source" }
+        }
+      ]
+    },
     "source": {
       "type": "object",
       "additionalProperties": false,

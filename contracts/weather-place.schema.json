@@ -16,6 +16,12 @@
         "home": {
           "type": "boolean",
           "description": "When true, this place is a home. Brief shows every home. Storm also shows places with home set to false."
+        },
+        "region": { "type": "string", "minLength": 1 },
+        "alerts": {
+          "type": "string",
+          "enum": ["nws", "none"],
+          "description": "nws asks the National Weather Service. none means no public alert source covers the place."
         }
       }
   }

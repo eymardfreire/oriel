@@ -19,6 +19,7 @@ class ScoreRow:
     score: str | None = None
     excerpt: str | None = None
     factual: str | None = None
+    clock: str | None = None
 
 
 def parse_competition(competition: Competition, payload: bytes, now: datetime) -> list[ScoreRow]:
@@ -30,6 +31,8 @@ def parse_competition(competition: Competition, payload: bytes, now: datetime) -
         return _openligadb(competition, payload, now)
     if competition.kind == "jolpica-results":
         return _jolpica(competition, payload, now)
+    if competition.kind == "thesportsdb":
+        return _thesportsdb(competition, payload, now)
     if competition.kind == "fixture":
         return _fixture(competition, payload, now)
     raise ValueError(f"unknown kind {competition.kind}")
@@ -77,16 +80,29 @@ def _openligadb(competition: Competition, payload: bytes, now: datetime) -> list
         return []
     rows: list[ScoreRow] = []
     for match in body:
-        if not isinstance(match, dict) or not match.get("matchIsFinished"):
+        if not isinstance(match, dict):
             continue
         home = _name(match.get("team1"))
         away = _name(match.get("team2"))
         when = _stamp(match.get("matchDateTime"))
+        if match.get("matchIsFinished"):
+            final = _final_result(match.get("matchResults"))
+            if final is None:
+                continue
+            home_score, away_score = final
+            rows.append(_row(competition, home, away, when, "final", home_score, away_score, now))
+            continue
+        if when is None or when > now + timedelta(days=14):
+            continue
+        if when > now:
+            rows.append(_row(competition, home, away, when, "preview", None, None, now))
+            continue
         final = _final_result(match.get("matchResults"))
         if final is None:
+            rows.append(_row(competition, home, away, when, "live", None, None, now))
             continue
         home_score, away_score = final
-        rows.append(_row(competition, home, away, when, "final", home_score, away_score, now))
+        rows.append(_row(competition, home, away, when, "live", home_score, away_score, now))
     return [row for row in rows if row is not None]
 
 
@@ -118,6 +134,64 @@ def _jolpica(competition: Competition, payload: bytes, now: datetime) -> list[Sc
             factual=factual_line(winner, second, score),
         )
     ]
+
+
+def _thesportsdb(competition: Competition, payload: bytes, now: datetime) -> list[ScoreRow]:
+    body = _json(payload)
+    events = body.get("events") if isinstance(body, dict) else None
+    if not isinstance(events, list):
+        return []
+    rows: list[ScoreRow] = []
+    seen: set[str] = set()
+    for event in events:
+        if not isinstance(event, dict):
+            continue
+        ident = str(event.get("idEvent") or "")
+        if ident and ident in seen:
+            continue
+        if ident:
+            seen.add(ident)
+        home = str(event.get("strHomeTeam") or "").strip()
+        away = str(event.get("strAwayTeam") or "").strip()
+        when = _stamp(event.get("dateEvent") or event.get("strTimestamp"))
+        status = str(event.get("strStatus") or "").upper()
+        mapped = "final" if status in {"FT", "AET", "PEN", "FINAL"} else "live" if status in {"1H", "2H", "HT", "LIVE", "Q1", "Q2", "Q3", "Q4"} else "preview"
+        clock = _clock(event.get("strProgress"))
+        row = _row(
+            competition,
+            home,
+            away,
+            when,
+            mapped,
+            event.get("intHomeScore"),
+            event.get("intAwayScore"),
+            now,
+        )
+        if row is None:
+            continue
+        if clock and mapped == "live":
+            row = ScoreRow(
+                id=row.id,
+                home=row.home,
+                away=row.away,
+                when=row.when,
+                state=row.state,
+                score=row.score,
+                clock=clock,
+            )
+        rows.append(row)
+    return rows
+
+
+def _clock(value: object) -> str | None:
+    if not isinstance(value, str):
+        return None
+    text = value.strip()
+    if not text or len(text) > 12:
+        return None
+    if any(mark in text for mark in (":", "'")) or text.isdigit():
+        return text
+    return None
 
 
 def _fixture(competition: Competition, payload: bytes, now: datetime) -> list[ScoreRow]:
@@ -215,13 +289,24 @@ def _loser(home: str, away: str, home_score: object, away_score: object) -> str:
 
 
 def _score(home_score: object, away_score: object) -> str | None:
+    home_score = _numeric(home_score)
+    away_score = _numeric(away_score)
     if home_score is None or away_score is None:
         return None
-    if isinstance(home_score, bool) or isinstance(away_score, bool):
-        return None
-    if not isinstance(home_score, (int, float)) or not isinstance(away_score, (int, float)):
-        return None
     return f"{_trim(home_score)}-{_trim(away_score)}"
+
+
+def _numeric(value: object) -> int | float | None:
+    if isinstance(value, bool) or value is None:
+        return None
+    if isinstance(value, (int, float)):
+        return value
+    if isinstance(value, str) and value.strip():
+        try:
+            return int(value) if "." not in value else float(value)
+        except ValueError:
+            return None
+    return None
 
 
 def _trim(value: float | int) -> str:
@@ -231,9 +316,10 @@ def _trim(value: float | int) -> str:
 
 
 def _number(value: object) -> float:
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
+    parsed = _numeric(value)
+    if parsed is None:
         return 0
-    return float(value)
+    return float(parsed)
 
 
 def _recent(when: datetime, now: datetime) -> bool:

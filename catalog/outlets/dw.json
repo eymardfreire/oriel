@@ -1,0 +1,9 @@
+{
+  "id": "dw",
+  "name": "DW",
+  "fetch": "https://rss.dw.com/rdf/rss-en-all",
+  "language": "en",
+  "region": "europe",
+  "desks": ["world"],
+  "enabled": true
+}

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"os"
 	"os/exec"
 	"strings"
 )
@@ -31,11 +30,16 @@ func applySuggestion(panels []Panel, deskID string) ([]Panel, string) {
 
 func launchProcesses(exe, server string, desk Desk) (string, error) {
 	return startDesk(desk, func(bayID string) error {
-		command := bayCommand(exe, server, bayID)
-		command.Stdout = os.Stdout
-		command.Stderr = os.Stderr
+		command := launchCommand(exe, server, bayID)
 		return command.Start()
 	})
+}
+
+func launchCommand(exe, server, bayID string) *exec.Cmd {
+	command := bayCommand(exe, server, bayID)
+	command.Stdout = nil
+	command.Stderr = nil
+	return command
 }
 
 func bayCommand(exe, server, bayID string) *exec.Cmd {

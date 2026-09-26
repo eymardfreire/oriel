@@ -1,0 +1,9 @@
+{
+  "id": "bbc-rugby-league",
+  "name": "BBC Sport",
+  "sport": "rugby-league",
+  "sport_name": "Rugby league",
+  "fetch": "https://feeds.bbci.co.uk/sport/rugby-league/rss.xml",
+  "enabled": true,
+  "note": "Checked 2026-09-24. Public rugby league RSS returned XML. No login and no API key."
+}

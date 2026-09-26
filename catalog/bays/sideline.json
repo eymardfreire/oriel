@@ -1,0 +1,8 @@
+{
+  "id": "sideline",
+  "title": "Sideline",
+  "theme": "night",
+  "layout": "stack",
+  "refresh_seconds": 120,
+  "panels": []
+}

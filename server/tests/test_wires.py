@@ -58,6 +58,11 @@ SHIPPED = {
     "guardian-world",
     "npr-politics",
     "nyt-us",
+    "al-jazeera",
+    "dw",
+    "france-24",
+    "abc-australia",
+    "cbc-world",
 }
 
 
@@ -86,6 +91,16 @@ def test_parse_rss_and_atom() -> None:
     assert atom[0].title == "Atom title"
     assert atom[0].link == "https://example.test/atom"
     assert atom[0].observed_at == WHEN
+    described = parse_feed(
+        b"""<?xml version="1.0"?><rss><channel><item>
+        <title>Tariff notice</title>
+        <description><![CDATA[<p>Hello <b>there</b></p>]]></description>
+        <link>https://example.test/tariff</link>
+        </item></channel></rss>""",
+        fallback=WHEN,
+    )
+    assert described[0].summary == "Hello there"
+    assert rss[0].summary == ""
 
 
 def test_enabled_outlet_maps_to_its_desk_only(tmp_path: Path) -> None:
@@ -277,6 +292,7 @@ def test_wires_route_returns_the_panel(tmp_path: Path) -> None:
     assert [panel["id"] for panel in body["panels"]] == [f"wires-{desk}" for desk in WIRE_DESKS]
     tech = client.get("/panels/wires-technology").json()
     assert tech["items"][0]["source"] == "Tech Wire"
+    assert tech["refresh_seconds"] == 120
     assert client.get("/panels/not-a-panel").status_code == 404
 
 

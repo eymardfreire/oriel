@@ -19,6 +19,8 @@ class FeedEntry:
     title: str
     link: str
     observed_at: datetime
+    summary: str = ""
+    source_name: str = ""
 
 
 def parse_feed(payload: bytes, *, fallback: datetime) -> list[FeedEntry]:
@@ -42,6 +44,7 @@ def parse_feed(payload: bytes, *, fallback: datetime) -> list[FeedEntry]:
                 title=title,
                 link=link,
                 observed_at=_observed(node, fallback),
+                summary=_summary(node, title),
             )
         )
         if len(entries) >= FEED_ENTRY_LIMIT:
@@ -64,6 +67,14 @@ def _text(node: ElementTree.Element, name: str) -> str:
     for child in list(node):
         if _local(child.tag) == name:
             return _clean("".join(child.itertext()))
+    return ""
+
+
+def _summary(node: ElementTree.Element, title: str) -> str:
+    for name in ("description", "summary"):
+        text = _text(node, name)
+        if text and text != title:
+            return text
     return ""
 
 

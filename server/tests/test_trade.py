@@ -57,11 +57,14 @@ def test_shipped_trade_sources_are_public_https() -> None:
     sources = load_sources(directory / "sources.json")
     selection = load_selection(directory / "selection.json")
     assert set(sources) == set(FAMILIES)
-    assert sources["policy"].name == "WTO"
-    assert sources["freight"].name == "FreightWaves"
-    assert sources["supply-chain"].name == "Supply Chain Dive"
+    assert sources["policy"][0].name == "WTO"
+    assert {item.id for item in sources["policy"]} == {"wto-news", "cbp-news"}
+    assert sources["freight"][0].name == "FreightWaves"
+    assert {item.id for item in sources["freight"]} == {"freightwaves", "gcaptain"}
+    assert sources["supply-chain"][0].name == "Supply Chain Dive"
+    assert {item.id for item in sources["supply-chain"]} == {"supply-chain-dive", "loadstar"}
     for family in FAMILIES:
-        assert sources[family].fetch.startswith("https://")
+        assert all(item.fetch.startswith("https://") for item in sources[family])
         assert selection[family].enabled is True
 
 
@@ -105,7 +108,7 @@ def test_failed_refresh_keeps_last_good_title(tmp_path: Path) -> None:
     poller.refresh()
     panel = poller.panel("trade-policy")
     assert panel["stale"] is True
-    assert panel["stale_reason"] == "timeout"
+    assert panel["stale_reason"] == "wto-news: timeout"
     assert panel["items"][0]["title"] == "Tariff notice"
     assert panel["items"][0]["source"] == "WTO"
 

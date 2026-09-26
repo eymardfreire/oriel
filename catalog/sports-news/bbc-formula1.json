@@ -1,0 +1,9 @@
+{
+  "id": "bbc-formula1",
+  "name": "BBC Sport",
+  "sport": "motorsport",
+  "sport_name": "Formula 1",
+  "fetch": "https://feeds.bbci.co.uk/sport/formula1/rss.xml",
+  "enabled": true,
+  "note": "Checked 2026-09-24. Public Formula 1 RSS returned XML. No login and no API key."
+}

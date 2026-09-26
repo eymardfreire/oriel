@@ -19,7 +19,7 @@ from oriel_server.wires.rss import FeedEntry, parse_feed
 
 logger = logging.getLogger("oriel.trade")
 
-PANEL_ITEM_LIMIT = 8
+PANEL_ITEM_LIMIT = 24
 Fetcher = Callable[[str], bytes]
 
 
@@ -96,7 +96,7 @@ class TradePoller:
     def _apply(
         self,
         enabled: list[str],
-        sources: dict[str, Source],
+        sources: dict[str, tuple[Source, ...]],
         fetched: dict[str, tuple[list[FeedEntry], str]],
         now: datetime,
     ) -> None:
@@ -121,7 +121,7 @@ class TradePoller:
                 panel["stale_reason"] = cached.error
                 stored[family] = StoredPanel(panel, previous.updated_at)
                 continue
-            items = _items(sources[family], family, cached.entries) if cached.entries else []
+            items = _items(sources[family][0], family, cached.entries) if cached.entries else []
             stored[family] = StoredPanel(
                 _panel(family, now, bool(cached.error), cached.error, _limit(items)),
                 now,
@@ -132,7 +132,7 @@ class TradePoller:
     def _fetch_enabled(
         self,
         families: list[str],
-        sources: dict[str, Source],
+        sources: dict[str, tuple[Source, ...]],
     ) -> dict[str, tuple[list[FeedEntry], str]]:
         results: dict[str, tuple[list[FeedEntry], str]] = {}
         workers = min(3, len(families))
@@ -144,12 +144,34 @@ class TradePoller:
                 results[family] = future.result()
         return results
 
-    def _fetch_family(self, source: Source) -> tuple[list[FeedEntry], str]:
-        try:
-            payload = self._fetcher(source.fetch)
-            return parse_feed(payload, fallback=self._now()), ""
-        except Exception as exc:
-            return [], short_error(exc)
+    def _fetch_family(self, sources: tuple[Source, ...]) -> tuple[list[FeedEntry], str]:
+        entries: list[FeedEntry] = []
+        errors: list[str] = []
+        for source in sources:
+            try:
+                payload = self._fetcher(source.fetch)
+            except Exception as exc:
+                errors.append(f"{source.id}: {short_error(exc)}")
+                continue
+            try:
+                parsed = parse_feed(payload, fallback=self._now())
+            except Exception as exc:
+                errors.append(f"{source.id}: {short_error(exc)}")
+                continue
+            entries.extend(
+                FeedEntry(
+                    id=entry.id,
+                    title=entry.title,
+                    link=entry.link,
+                    observed_at=entry.observed_at,
+                    summary=entry.summary,
+                    source_name=source.name,
+                )
+                for entry in parsed
+            )
+        if entries:
+            return entries, ""
+        return [], "; ".join(errors) or "fetch failed"
 
     def _public(self, stored: StoredPanel, now: datetime) -> dict:
         panel = copy.deepcopy(stored.panel)
@@ -259,11 +281,11 @@ def _items(source: Source, family: str, entries: list[FeedEntry]) -> list[dict]:
             {
                 "id": f"{source.id}:{digest}",
                 "title": entry.title,
-                "source": source.name,
+                "source": entry.source_name or source.name,
                 "source_url": entry.link,
                 "observed_at": _iso(entry.observed_at),
                 "row": "headline",
-                "fields": {"family": family},
+                "fields": _headline_fields(family, entry.summary),
             }
         )
     return items
@@ -301,13 +323,25 @@ def _parse_iso(value: str) -> datetime | None:
     return parsed.astimezone(timezone.utc)
 
 
+def _headline_fields(family: str, summary: str) -> dict:
+    fields = {"family": family}
+    if summary:
+        fields["summary"] = summary
+    return fields
+
+
 def _entry_state(entry: FeedEntry) -> dict:
-    return {
+    body = {
         "id": entry.id,
         "title": entry.title,
         "link": entry.link,
         "observed_at": _iso(entry.observed_at),
     }
+    if entry.summary:
+        body["summary"] = entry.summary
+    if entry.source_name:
+        body["source_name"] = entry.source_name
+    return body
 
 
 def _entry_from_state(raw: object) -> FeedEntry | None:
@@ -324,4 +358,17 @@ def _entry_from_state(raw: object) -> FeedEntry | None:
     parsed = _parse_iso(observed)
     if parsed is None:
         return None
-    return FeedEntry(id=identity, title=title, link=link, observed_at=parsed)
+    summary = raw.get("summary")
+    if not isinstance(summary, str):
+        summary = ""
+    source_name = raw.get("source_name")
+    if not isinstance(source_name, str):
+        source_name = ""
+    return FeedEntry(
+        id=identity,
+        title=title,
+        link=link,
+        observed_at=parsed,
+        summary=summary.strip(),
+        source_name=source_name.strip(),
+    )

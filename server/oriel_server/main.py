@@ -11,11 +11,13 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 from oriel_server import __version__
+from oriel_server.brief.selection import BriefStore
 from oriel_server.config import Config, load_config
 from datetime import datetime, timezone
 
 from oriel_server.markets.poller import MarketPoller
 from oriel_server.recommendations.service import Recommendations
+from oriel_server.sports.news import SidelinePoller
 from oriel_server.sports.poller import SportsPoller
 from oriel_server.trade.poller import TradePoller
 from oriel_server.weather.poller import WeatherPoller
@@ -45,6 +47,21 @@ class ScoringCommand(BaseModel):
     scoring: str
 
 
+class FollowCommand(BaseModel):
+    competition_id: str
+    follow: bool
+
+
+class SportFocus(BaseModel):
+    sport: str
+    follow: bool
+
+
+class BriefChoice(BaseModel):
+    slot: str
+    id: str = ""
+
+
 class Health(BaseModel):
     status: str
     service: str
@@ -61,6 +78,8 @@ def create_app(
     trade_poller: TradePoller | None = None,
     weather_poller: WeatherPoller | None = None,
     sports_poller: SportsPoller | None = None,
+    sideline_poller: SidelinePoller | None = None,
+    brief: BriefStore | None = None,
 ) -> FastAPI:
     cfg = config if config is not None else load_config()
     root = None
@@ -110,6 +129,12 @@ def create_app(
             stale_after_seconds=cfg.sports.stale_after_seconds,
             state_path=root / "server" / "state" / "sports.json",
         )
+    if sideline_poller is None and cfg.sports.enabled:
+        assert root is not None
+        sideline_poller = SidelinePoller(
+            root / "catalog" / "sports-news",
+            root / "catalog" / "sports" / "sideline.json",
+        )
 
     @asynccontextmanager
     async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
@@ -129,6 +154,9 @@ def create_app(
         if sports_poller is not None:
             await asyncio.to_thread(sports_poller.refresh)
             tasks.append(asyncio.create_task(_poll_loop(sports_poller.refresh, cfg.sports.refresh_seconds)))
+        if sideline_poller is not None:
+            await asyncio.to_thread(sideline_poller.refresh)
+            tasks.append(asyncio.create_task(_poll_loop(sideline_poller.refresh, cfg.sports.refresh_seconds)))
         try:
             yield
         finally:
@@ -145,6 +173,15 @@ def create_app(
     app.state.trade = trade_poller
     app.state.weather = weather_poller
     app.state.sports = sports_poller
+    app.state.sideline = sideline_poller
+    brief_store = brief
+    if brief_store is None:
+        try:
+            brief_root = root if root is not None else find_repo_root()
+            brief_store = BriefStore.open(brief_root, cfg.home_place)
+        except FileNotFoundError:
+            brief_store = None
+    app.state.brief = brief_store
     app.state.recommendations = None
     if root is not None:
         app.state.recommendations = Recommendations(
@@ -168,47 +205,91 @@ def create_app(
             ),
         )
 
+    @app.get("/bays/brief/selection")
+    def brief_selection() -> dict:
+        if app.state.brief is None:
+            raise HTTPException(status_code=404)
+        return app.state.brief.payload()
+
+    @app.post("/bays/brief/selection")
+    def brief_select(body: BriefChoice) -> dict:
+        if app.state.brief is None:
+            raise HTTPException(status_code=404)
+        try:
+            app.state.brief.choose(body.slot, body.id)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        return app.state.brief.payload()
+
     @app.get("/bays/wires")
     def wires_bay() -> dict:
         if app.state.poller is None:
             return {"id": "wires", "panels": []}
-        return {"id": "wires", "panels": app.state.poller.panels()}
+        return {"id": "wires", "panels": _stamp(app.state.poller.panels(), cfg.wires.refresh_seconds)}
 
     @app.get("/bays/markets")
     def markets_bay() -> dict:
         if app.state.markets is None:
             return {"id": "markets", "panels": []}
-        return {"id": "markets", "panels": app.state.markets.panels()}
+        return {"id": "markets", "panels": _stamp(app.state.markets.panels(), cfg.markets.refresh_seconds)}
 
     @app.get("/bays/trade")
     def trade_bay() -> dict:
         if app.state.trade is None:
             return {"id": "trade", "panels": []}
-        return {"id": "trade", "panels": app.state.trade.panels()}
+        return {"id": "trade", "panels": _stamp(app.state.trade.panels(), cfg.trade.refresh_seconds)}
 
     @app.get("/bays/storm")
     def storm_bay() -> dict:
         if app.state.weather is None:
             return {"id": "storm", "panels": []}
-        return {"id": "storm", "panels": app.state.weather.panels()}
+        return {"id": "storm", "panels": _stamp(app.state.weather.panels(), cfg.weather.refresh_seconds)}
 
     @app.get("/bays/field")
     def field_bay() -> dict:
         if app.state.sports is None:
             return {"id": "field", "panels": []}
-        return {"id": "field", "panels": app.state.sports.panels_for("field")}
+        return {"id": "field", "panels": _stamp(app.state.sports.panels_for("field"), cfg.sports.refresh_seconds)}
+
+    @app.post("/bays/field/follows")
+    def field_follows(body: FollowCommand) -> dict:
+        if app.state.sports is None:
+            raise HTTPException(status_code=404)
+        try:
+            app.state.sports.follow(body.competition_id, body.follow)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        app.state.sports.refresh()
+        return {"id": "field", "panels": _stamp(app.state.sports.panels_for("field"), cfg.sports.refresh_seconds)}
 
     @app.get("/bays/far")
     def far_bay() -> dict:
         if app.state.sports is None:
             return {"id": "far", "panels": []}
-        return {"id": "far", "panels": app.state.sports.panels_for("far")}
+        return {"id": "far", "panels": _stamp(app.state.sports.panels_for("far"), cfg.sports.refresh_seconds)}
+
+    @app.get("/bays/sideline")
+    def sideline_bay() -> dict:
+        if app.state.sideline is None:
+            return {"id": "sideline", "panels": []}
+        return {"id": "sideline", "panels": _stamp(app.state.sideline.panels(), cfg.sports.refresh_seconds)}
+
+    @app.post("/bays/sideline/focus")
+    def sideline_focus(body: SportFocus) -> dict:
+        if app.state.sideline is None:
+            raise HTTPException(status_code=404)
+        try:
+            app.state.sideline.focus(body.sport, body.follow)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        app.state.sideline.refresh()
+        return {"id": "sideline", "panels": _stamp(app.state.sideline.panels(), cfg.sports.refresh_seconds)}
 
     @app.get("/bays/fantasy")
     def fantasy_bay() -> dict:
         if app.state.sports is None:
             return {"id": "fantasy", "panels": []}
-        return {"id": "fantasy", "panels": app.state.sports.panels_for("fantasy")}
+        return {"id": "fantasy", "panels": _stamp(app.state.sports.panels_for("fantasy"), cfg.sports.refresh_seconds)}
 
     @app.post("/bays/fantasy/select")
     def fantasy_select(body: PlayerCommand) -> dict:
@@ -238,7 +319,7 @@ def create_app(
             app.state.sports.scoring(body.scoring)
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
-        return {"id": "fantasy", "panels": app.state.sports.panels_for("fantasy")}
+        return {"id": "fantasy", "panels": _stamp(app.state.sports.panels_for("fantasy"), cfg.sports.refresh_seconds)}
 
     def _fantasy_command(action: str, player_id: str) -> dict:
         if app.state.sports is None:
@@ -248,7 +329,7 @@ def create_app(
             method(player_id)
         except KeyError as exc:
             raise HTTPException(status_code=404, detail="player not in the catalog") from exc
-        return {"id": "fantasy", "panels": app.state.sports.panels_for("fantasy")}
+        return {"id": "fantasy", "panels": _stamp(app.state.sports.panels_for("fantasy"), cfg.sports.refresh_seconds)}
 
     @app.get("/suggestions")
     def suggestions() -> dict:
@@ -296,19 +377,40 @@ def create_app(
             "sports": app.state.sports,
             "field": app.state.sports,
             "fantasy": app.state.sports,
+            "sideline": app.state.sideline,
         }
 
     @app.get("/panels/{panel_id}")
     def panel(panel_id: str) -> dict:
-        for source in (app.state.poller, app.state.markets, app.state.trade, app.state.weather, app.state.sports):
+        for source in (app.state.poller, app.state.markets, app.state.trade, app.state.weather, app.state.sports, app.state.sideline):
             if source is None:
                 continue
             found = source.panel(panel_id)
             if found is not None:
-                return found
+                return _stamp([found], _refresh_for(source))[0]
         raise HTTPException(status_code=404)
 
+    def _refresh_for(source: object) -> int:
+        if source is app.state.poller:
+            return cfg.wires.refresh_seconds
+        if source is app.state.markets:
+            return cfg.markets.refresh_seconds
+        if source is app.state.trade:
+            return cfg.trade.refresh_seconds
+        if source is app.state.weather:
+            return cfg.weather.refresh_seconds
+        return cfg.sports.refresh_seconds
+
     return app
+
+
+def _stamp(panels: list[dict], refresh_seconds: int) -> list[dict]:
+    stamped = []
+    for panel in panels:
+        copy = dict(panel)
+        copy["refresh_seconds"] = refresh_seconds
+        stamped.append(copy)
+    return stamped
 
 
 async def _poll_loop(refresh: Callable[[], None], refresh_seconds: int) -> None:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from urllib.parse import quote
@@ -41,6 +42,10 @@ def treasury_url(year: int) -> str:
         "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml"
         f"?data=daily_treasury_yield_curve&field_tdr_date_value={year}"
     )
+
+
+_COIN_SYMBOL = re.compile(r"^[A-Z0-9][A-Z0-9._-]{0,15}$")
+_COIN_ID = re.compile(r"^[a-z0-9-]{1,64}$")
 
 
 def coingecko_url(ids: list[str]) -> str:
@@ -151,6 +156,68 @@ def parse_treasury(
             delayed=delayed,
         )
     return quotes
+
+
+def coingecko_markets_url(limit: int) -> str:
+    return (
+        "https://api.coingecko.com/api/v3/coins/markets"
+        f"?vs_currency=usd&order=market_cap_desc&per_page={limit}&page=1&sparkline=false"
+    )
+
+
+def parse_coingecko_markets(
+    payload: bytes,
+    *,
+    source: str,
+    delayed: bool,
+    observed_at: datetime,
+    limit: int,
+) -> list[tuple[Instrument, Quote]]:
+    try:
+        body = json.loads(payload)
+    except json.JSONDecodeError as exc:
+        raise ValueError("unreadable quote") from exc
+    if not isinstance(body, list):
+        raise ValueError("unreadable quote")
+    found: list[tuple[Instrument, Quote]] = []
+    seen: set[str] = set()
+    for row in body:
+        if len(found) >= limit:
+            break
+        if not isinstance(row, dict):
+            continue
+        raw_symbol = row.get("symbol")
+        name = row.get("name")
+        coin_id = row.get("id")
+        price = _number(row.get("current_price"))
+        if not isinstance(raw_symbol, str) or not isinstance(name, str) or not isinstance(coin_id, str):
+            continue
+        if price is None:
+            continue
+        symbol = raw_symbol.upper()
+        if symbol in seen or not _COIN_SYMBOL.fullmatch(symbol) or not _COIN_ID.fullmatch(coin_id):
+            continue
+        seen.add(symbol)
+        change = _number(row.get("price_change_24h"))
+        instrument = Instrument(symbol=symbol, title=name, query=coin_id)
+        found.append(
+            (
+                instrument,
+                Quote(
+                    symbol=symbol,
+                    title=name,
+                    price=round(price, 2 if price >= 1 else 6),
+                    change=None if change is None else round(change, 2),
+                    observed_at=observed_at,
+                    source=source,
+                    source_url=f"https://www.coingecko.com/en/coins/{coin_id}",
+                    delayed=delayed,
+                ),
+            )
+        )
+    if not found:
+        raise ValueError("unreadable quote")
+    return found
 
 
 def parse_coingecko(

@@ -5,7 +5,15 @@
     "kind": "yahoo-chart",
     "delayed": true,
     "fetch": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}",
-    "note": "Checked 2026-09-23. Stooq's public CSV returned 404 or a browser check, so it is not the board. This chart endpoint returned index prices with no login and no API key. Rows stay marked delayed."
+    "note": "Checked 2026-09-23. Stooq's public CSV returned 404 or a browser check, so it is not the board. This chart endpoint returned index prices with no login and no API key. Rows stay marked delayed. On 2026-09-24 the same endpoint returned FTSE 100, DAX, Nikkei 225, and Hang Seng. On 2026-09-25 it returned Russell 2000, CBOE VIX, CAC 40, Euro Stoxx 50, S&P/TSX, ASX 200, KOSPI, Shanghai Composite as 000001.SS, BSE Sensex, and Ibovespa. ^SSEC returned 404 and is not used."
+  },
+  "sectors": {
+    "id": "yahoo-chart",
+    "name": "Yahoo Finance",
+    "kind": "yahoo-chart",
+    "delayed": true,
+    "fetch": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}",
+    "note": "Same delayed chart endpoint as indices. Checked 2026-09-25. No login and no API key. The eleven SPDR sector ETFs returned a price: technology, financials, energy, health care, consumer discretionary, consumer staples, industrials, materials, real estate, utilities, and communication services. The same day the industry ETFs XBI, XHB, XRT, XME, XOP, KRE, KBE, XSD, XAR, XPH, XTN, XSW, XHE, XHS, KIE, and XES each returned a price."
   },
   "equities": {
     "id": "yahoo-chart",
@@ -13,7 +21,103 @@
     "kind": "yahoo-chart",
     "delayed": true,
     "fetch": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}",
-    "note": "Same delayed chart endpoint as indices. Checked 2026-09-23 with AAPL and MSFT. No login and no API key."
+    "note": "Same delayed chart endpoint as indices. Checked 2026-09-23 with AAPL and MSFT. No login and no API key. On 2026-09-24 the same endpoint returned NVIDIA, Amazon, Alphabet, and Meta. On 2026-09-25 it returned Broadcom, Tesla, Berkshire Hathaway, Eli Lilly, JPMorgan, Visa, UnitedHealth, Exxon Mobil, Mastercard, Johnson & Johnson, Costco, Home Depot, Procter & Gamble, Bank of America, and Walmart. Later that day it returned AMD, Netflix, Oracle, the TSMC ADR, and Goldman Sachs. This family stays the US tape. It is not split into NYSE and Nasdaq."
+  },
+  "london": {
+    "id": "yahoo-chart",
+    "name": "Yahoo Finance",
+    "kind": "yahoo-chart",
+    "delayed": true,
+    "fetch": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}",
+    "note": "Same delayed chart endpoint as indices. Checked 2026-09-25. No login and no API key. London listings returned a price in pence: Shell, AstraZeneca, HSBC, Unilever, BP, Rio Tinto, GSK, and RELX."
+  },
+  "europe": {
+    "id": "yahoo-chart",
+    "name": "Yahoo Finance",
+    "kind": "yahoo-chart",
+    "delayed": true,
+    "fetch": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}",
+    "note": "Same delayed chart endpoint as indices. Checked 2026-09-25. No login and no API key. Paris, Frankfurt, Amsterdam, and Zurich returned LVMH, L'Oreal, TotalEnergies, Airbus, SAP, Siemens, Allianz, ASML, Nestle, and Novartis. ROG.SW for Roche returned 404 and is not used."
+  },
+  "tokyo": {
+    "id": "yahoo-chart",
+    "name": "Yahoo Finance",
+    "kind": "yahoo-chart",
+    "delayed": true,
+    "fetch": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}",
+    "note": "Same delayed chart endpoint as indices. Checked 2026-09-25. No login and no API key. Toyota, Sony, SoftBank, Keyence, Mitsubishi UFJ, Tokyo Electron, and Fast Retailing each returned a price in yen."
+  },
+  "hongkong": {
+    "id": "yahoo-chart",
+    "name": "Yahoo Finance",
+    "kind": "yahoo-chart",
+    "delayed": true,
+    "fetch": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}",
+    "note": "Same delayed chart endpoint as indices. Checked 2026-09-25. No login and no API key. Tencent, Alibaba, Meituan, Xiaomi, AIA, China Construction Bank, and HSBC each returned a price in Hong Kong dollars."
+  },
+  "china": {
+    "id": "yahoo-chart",
+    "name": "Yahoo Finance",
+    "kind": "yahoo-chart",
+    "delayed": true,
+    "fetch": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}",
+    "note": "Same delayed chart endpoint as indices. Checked 2026-09-25. No login and no API key. Shanghai returned Kweichow Moutai, Ping An, China Merchants Bank, and ICBC. Shenzhen returned CATL and BYD. The Shanghai Composite stays in indices as 000001.SS."
+  },
+  "india": {
+    "id": "yahoo-chart",
+    "name": "Yahoo Finance",
+    "kind": "yahoo-chart",
+    "delayed": true,
+    "fetch": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}",
+    "note": "Same delayed chart endpoint as indices. Checked 2026-09-25. No login and no API key. Reliance, Tata Consultancy Services, HDFC Bank, Infosys, ICICI Bank, and Bharti Airtel each returned a price in rupees."
+  },
+  "brazil": {
+    "id": "yahoo-chart",
+    "name": "Yahoo Finance",
+    "kind": "yahoo-chart",
+    "delayed": true,
+    "fetch": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}",
+    "note": "Same delayed chart endpoint as indices. Checked 2026-09-25. No login and no API key. Petrobras, Vale, Itau, Bradesco, Ambev, and WEG each returned a price in reais. Ibovespa stays in indices."
+  },
+  "canada": {
+    "id": "yahoo-chart",
+    "name": "Yahoo Finance",
+    "kind": "yahoo-chart",
+    "delayed": true,
+    "fetch": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}",
+    "note": "Same delayed chart endpoint as indices. Checked 2026-09-25. No login and no API key. Royal Bank of Canada, Toronto-Dominion, Shopify, and Enbridge each returned a price in Canadian dollars."
+  },
+  "korea": {
+    "id": "yahoo-chart",
+    "name": "Yahoo Finance",
+    "kind": "yahoo-chart",
+    "delayed": true,
+    "fetch": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}",
+    "note": "Same delayed chart endpoint as indices. Checked 2026-09-25. No login and no API key. Samsung Electronics, SK Hynix, and Hyundai Motor each returned a price in won."
+  },
+  "taiwan": {
+    "id": "yahoo-chart",
+    "name": "Yahoo Finance",
+    "kind": "yahoo-chart",
+    "delayed": true,
+    "fetch": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}",
+    "note": "Same delayed chart endpoint as indices. Checked 2026-09-25. No login and no API key. TSMC, Hon Hai, and MediaTek each returned a price in Taiwan dollars. The US ADR stays on the equities tape as TSM."
+  },
+  "australia": {
+    "id": "yahoo-chart",
+    "name": "Yahoo Finance",
+    "kind": "yahoo-chart",
+    "delayed": true,
+    "fetch": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}",
+    "note": "Same delayed chart endpoint as indices. Checked 2026-09-25. No login and no API key. BHP, Commonwealth Bank, and CSL each returned a price in Australian dollars."
+  },
+  "funds": {
+    "id": "yahoo-chart",
+    "name": "Yahoo Finance",
+    "kind": "yahoo-chart",
+    "delayed": true,
+    "fetch": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}",
+    "note": "Same delayed chart endpoint as indices. Checked 2026-09-25. No login and no API key. These are US-listed funds, separate from the sector ETFs and the bond ETFs. Each title records the venue. NYSE Arca returned SPY, IWM, DIA, VTI, EFA, EEM, EWJ, FXI, EWZ, VGK, and GLD. Nasdaq returned QQQ and IBIT. Cboe returned INDA."
   },
   "fx": {
     "id": "frankfurter",
@@ -21,7 +125,7 @@
     "kind": "frankfurter",
     "delayed": true,
     "fetch": "https://api.frankfurter.app/{start}..{end}",
-    "note": "ECB reference rates via Frankfurter. Checked 2026-09-23. This is the prior business day's reference, not a live FX feed."
+    "note": "ECB reference rates via Frankfurter. Checked 2026-09-23. This is the prior business day's reference, not a live FX feed. On 2026-09-24 the same endpoint returned sterling, Swiss franc, Australian dollar, and Canadian dollar. On 2026-09-25 it returned the New Zealand dollar, krona, yuan, Hong Kong dollar, Singapore dollar, rupee, won, Mexican peso, real, rand, euro/sterling, and euro/yen."
   },
   "rates": {
     "id": "us-treasury",
@@ -29,7 +133,15 @@
     "kind": "treasury-yields",
     "delayed": true,
     "fetch": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve&field_tdr_date_value={year}",
-    "note": "Daily Treasury par yield curve. Checked 2026-09-23. FRED was not enabled because it needs an API key."
+    "note": "Daily Treasury par yield curve. Checked 2026-09-23. FRED was not enabled because it needs an API key. On 2026-09-24 the same curve included the 3-month, 5-year, and 30-year. On 2026-09-25 it included the 1-month, 6-month, 1-year, 3-year, 7-year, and 20-year."
+  },
+  "bonds": {
+    "id": "yahoo-chart",
+    "name": "Yahoo Finance",
+    "kind": "yahoo-chart",
+    "delayed": true,
+    "fetch": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}",
+    "note": "Same delayed chart endpoint as indices. Checked 2026-09-25. No login and no API key. These are tradable prices beside the Treasury yield curve: SHY, IEF, TLT, LQD, HYG, EMB, and TIP each returned a price."
   },
   "commodities": {
     "id": "yahoo-chart",
@@ -37,7 +149,7 @@
     "kind": "yahoo-chart",
     "delayed": true,
     "fetch": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}",
-    "note": "Delayed futures quotes. Checked 2026-09-23 with GC=F and CL=F. No login and no API key."
+    "note": "Delayed futures quotes. Checked 2026-09-23 with GC=F and CL=F. No login and no API key. On 2026-09-24 the same endpoint returned silver and natural gas. On 2026-09-25 it returned platinum, palladium, copper, Brent, heating oil, gasoline, wheat, corn, soybeans, coffee, sugar, and cotton."
   },
   "crypto": {
     "id": "coingecko",
@@ -45,6 +157,6 @@
     "kind": "coingecko",
     "delayed": true,
     "fetch": "https://api.coingecko.com/api/v3/simple/price",
-    "note": "Public simple price with no API key. Checked 2026-09-23. Labeled delayed because it is not an exchange feed."
+    "note": "Public prices with no API key. Checked 2026-09-23. Labeled delayed because it is not an exchange feed. On 2026-09-24 the coins/markets list returned the top 48 by market cap, including Bitcoin through Aave."
   }
 }

@@ -15,7 +15,7 @@ from typing import Callable
 
 from oriel_server.config import HomePlace
 from oriel_server.weather.alerts import Alert, alerts_url, parse_alerts
-from oriel_server.weather.meteo import ForecastDay, Observation, forecast_url, parse_meteo
+from oriel_server.weather.meteo import ForecastDay, Observation, forecast_batch_url, parse_meteo, split_forecasts
 from oriel_server.weather.news import Outlet, load_outlets
 from oriel_server.weather.places import Place, load_places
 from oriel_server.wires.poller import fetch_url, short_error
@@ -24,7 +24,7 @@ from oriel_server.wires.rss import FeedEntry, parse_feed
 logger = logging.getLogger("oriel.weather")
 
 PANEL_IDS = ("weather-observation", "weather-forecast", "weather-alerts", "weather-news")
-NEWS_LIMIT = 8
+NEWS_LIMIT = 24
 Fetcher = Callable[[str], bytes]
 
 
@@ -101,16 +101,17 @@ class WeatherPoller:
             self._save()
 
     def _observation(self, places: list[Place], fetched: dict[str, tuple[bytes, str]], now: datetime) -> StoredPanel:
+        payloads, batch_error = self._forecast_payloads(places, fetched)
         items: list[dict] = []
         errors: list[str] = []
         for place in places:
             if not place.configured:
                 items.append(_unavailable_observation(place, now))
                 continue
-            payload, error = fetched[forecast_url(place.latitude or 0, place.longitude or 0)]
+            payload = payloads.get(place.id)
             previous = _previous_item(self._stored.get("weather-observation"), place.id)
-            if error:
-                errors.append(f"{place.id}: {error}")
+            if payload is None:
+                errors.append(f"{place.id}: {batch_error or 'unreadable forecast'}")
                 items.append(previous or _unavailable_observation(place, now))
                 continue
             try:
@@ -123,18 +124,20 @@ class WeatherPoller:
                 items.append(previous or _unavailable_observation(place, now))
                 continue
             items.append(_observation_item(place, observation))
+        items = _extremes(items) + _by_region(items)
         return StoredPanel(_panel("weather-observation", "weather", "Observation", now, bool(errors), "; ".join(errors), items), now)
 
     def _forecast(self, places: list[Place], fetched: dict[str, tuple[bytes, str]], now: datetime) -> StoredPanel:
+        payloads, batch_error = self._forecast_payloads(places, fetched)
         items: list[dict] = []
         errors: list[str] = []
         for place in places:
             if not place.configured:
                 items.append(_unavailable_forecast(place, now))
                 continue
-            payload, error = fetched[forecast_url(place.latitude or 0, place.longitude or 0)]
-            if error:
-                errors.append(f"{place.id}: {error}")
+            payload = payloads.get(place.id)
+            if payload is None:
+                errors.append(f"{place.id}: {batch_error or 'unreadable forecast'}")
                 items.extend(_previous_place_items(self._stored.get("weather-forecast"), place.id) or [_unavailable_forecast(place, now)])
                 continue
             try:
@@ -152,9 +155,16 @@ class WeatherPoller:
     def _alerts(self, places: list[Place], fetched: dict[str, tuple[bytes, str]], now: datetime) -> StoredPanel:
         items: list[dict] = []
         errors: list[str] = []
+        uncovered: set[str] = set()
         for place in places:
             if not place.configured:
                 items.append(_alerts_unavailable(place, now))
+                continue
+            if place.alerts != "nws":
+                region = place.region or "Uncovered"
+                if region not in uncovered:
+                    uncovered.add(region)
+                    items.append(_uncovered_region(region, now))
                 continue
             payload, error = fetched[alerts_url(place.latitude or 0, place.longitude or 0)]
             if error:
@@ -212,6 +222,20 @@ class WeatherPoller:
             for future, url in futures.items():
                 results[url] = future.result()
         return results
+
+    def _forecast_payloads(self, places: list[Place], fetched: dict[str, tuple[bytes, str]]) -> tuple[dict[str, bytes], str]:
+        configured = [place for place in places if place.configured and place.latitude is not None and place.longitude is not None]
+        if not configured:
+            return {}, ""
+        url = forecast_batch_url([place.latitude or 0 for place in configured], [place.longitude or 0 for place in configured])
+        payload, error = fetched.get(url, (b"", "not fetched"))
+        if error:
+            return {}, error
+        try:
+            parts = split_forecasts(payload, len(configured))
+        except ValueError:
+            return {}, "unreadable forecast"
+        return {place.id: part for place, part in zip(configured, parts)}, ""
 
     def _one(self, url: str) -> tuple[bytes, str]:
         try:
@@ -283,13 +307,52 @@ class WeatherPoller:
 
 def _jobs(places: list[Place], outlets: list[Outlet]) -> list[str]:
     urls: list[str] = []
-    for place in places:
-        if place.latitude is None or place.longitude is None:
-            continue
-        urls.append(forecast_url(place.latitude, place.longitude))
-        urls.append(alerts_url(place.latitude, place.longitude))
+    configured = [place for place in places if place.latitude is not None and place.longitude is not None]
+    if configured:
+        urls.append(forecast_batch_url([place.latitude or 0 for place in configured], [place.longitude or 0 for place in configured]))
+    for place in configured:
+        if place.alerts == "nws":
+            urls.append(alerts_url(place.latitude or 0, place.longitude or 0))
     urls.extend(outlet.fetch for outlet in outlets)
     return list(dict.fromkeys(urls))
+
+
+def _extremes(items: list[dict]) -> list[dict]:
+    watched = [
+        item
+        for item in items
+        if item.get("row") == "observation" and item.get("fields", {}).get("home") is False and item["fields"].get("configured")
+    ]
+    strip: list[dict] = []
+    for key, label, choose in (
+        ("temperature_c", "hottest", max),
+        ("temperature_c", "coldest", min),
+        ("precipitation_mm", "wettest", max),
+        ("wind_speed_kmh", "windiest", max),
+    ):
+        ranked = [(item["fields"][key], item) for item in watched if key in item["fields"]]
+        if not ranked:
+            continue
+        value, item = choose(ranked, key=lambda pair: pair[0])
+        fields = {"extreme": label, "place": item["fields"]["place"], key: value}
+        if item["fields"].get("region"):
+            fields["region"] = item["fields"]["region"]
+        strip.append(
+            {
+                "id": f"extreme:{label}",
+                "title": label,
+                "source": item.get("source", ""),
+                "source_url": item.get("source_url", ""),
+                "observed_at": item.get("observed_at", ""),
+                "row": "observation",
+                "fields": fields,
+            }
+        )
+    return strip
+
+
+def _by_region(items: list[dict]) -> list[dict]:
+    return sorted(items, key=lambda item: item.get("fields", {}).get("region") or "")
 
 
 def _panel(panel_id: str, domain: str, title: str, updated_at: datetime, stale: bool, reason: str, items: list[dict]) -> dict:
@@ -318,10 +381,20 @@ def _unavailable_observation(place: Place, now: datetime) -> dict:
 
 def _observation_item(place: Place, observation: Observation) -> dict:
     fields: dict = {"place": place.name, "configured": True, "home": place.home}
+    if place.region:
+        fields["region"] = place.region
     if observation.temperature_c is not None:
         fields["temperature_c"] = observation.temperature_c
     if observation.condition:
         fields["condition"] = observation.condition
+    if observation.apparent_temperature_c is not None:
+        fields["apparent_temperature_c"] = observation.apparent_temperature_c
+    if observation.humidity_pct is not None:
+        fields["humidity_pct"] = observation.humidity_pct
+    if observation.wind_speed_kmh is not None:
+        fields["wind_speed_kmh"] = observation.wind_speed_kmh
+    if observation.precipitation_mm is not None:
+        fields["precipitation_mm"] = observation.precipitation_mm
     return {
         "id": f"observation:{place.id}",
         "title": place.name,
@@ -376,6 +449,19 @@ def _alerts_unavailable(place: Place, now: datetime) -> dict:
     }
 
 
+def _uncovered_region(region: str, now: datetime) -> dict:
+    headline = f"No public alert source covers {region}"
+    return {
+        "id": f"alerts:uncovered:{region}",
+        "title": headline,
+        "source": "Oriel",
+        "source_url": "",
+        "observed_at": _iso(now),
+        "row": "alert",
+        "fields": {"headline": headline, "region": region, "place": region},
+    }
+
+
 def _no_alerts(place: Place, now: datetime) -> dict:
     return {
         "id": f"alerts:{place.id}:none",
@@ -405,6 +491,9 @@ def _alert_item(place: Place, alert: Alert) -> dict:
 
 def _news_item(outlet: Outlet, entry: FeedEntry) -> dict:
     digest = hashlib.sha256(f"{outlet.id}:{entry.id}".encode()).hexdigest()[:16]
+    fields: dict = {}
+    if entry.summary:
+        fields["summary"] = entry.summary
     return {
         "id": f"{outlet.id}:{digest}",
         "title": entry.title,
@@ -412,7 +501,7 @@ def _news_item(outlet: Outlet, entry: FeedEntry) -> dict:
         "source_url": entry.link,
         "observed_at": _iso(entry.observed_at),
         "row": "headline",
-        "fields": {},
+        "fields": fields,
     }
 
 

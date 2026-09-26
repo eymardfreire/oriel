@@ -1,0 +1,9 @@
+{
+  "id": "bbc-football",
+  "name": "BBC Sport",
+  "sport": "football",
+  "sport_name": "Football",
+  "fetch": "https://feeds.bbci.co.uk/sport/football/rss.xml",
+  "enabled": true,
+  "note": "Checked 2026-09-24. Public football RSS returned XML. No login and no API key."
+}

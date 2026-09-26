@@ -23,6 +23,11 @@
       "type": "boolean",
       "description": "True when the payload is sample data and not a live fetch. Live payloads omit this or set it false."
     },
+    "refresh_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Server poll interval for this panel's domain. The client uses it for the live mark. Omit on fixtures."
+    },
     "items": {
       "type": "array",
       "items": { "$ref": "#/$defs/item" }

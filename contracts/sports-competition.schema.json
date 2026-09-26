@@ -26,9 +26,15 @@
         "tier": { "type": "string", "enum": ["live", "delayed", "results", "schedule", "far"] },
         "source_id": { "type": "string", "minLength": 1 },
         "source_name": { "type": "string", "minLength": 1 },
-        "kind": { "type": "string", "enum": ["mlb-schedule", "nhl-schedule", "openligadb", "jolpica-results", "fixture"] },
+        "kind": { "type": "string", "enum": ["mlb-schedule", "nhl-schedule", "openligadb", "jolpica-results", "thesportsdb", "fixture"] },
         "fetch": { "type": "string", "minLength": 1 },
-        "note": { "type": "string", "minLength": 1 }
+        "note": { "type": "string", "minLength": 1 },
+        "country": { "type": "string" },
+        "season": { "type": "string" },
+        "season_start": { "type": "string" },
+        "season_end": { "type": "string" },
+        "last_event": { "type": "string" },
+        "next_event": { "type": "string" }
       }
     }
   }

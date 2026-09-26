@@ -1,0 +1,9 @@
+{
+  "id": "bbc-rugby-union",
+  "name": "BBC Sport",
+  "sport": "rugby-union",
+  "sport_name": "Rugby union",
+  "fetch": "https://feeds.bbci.co.uk/sport/rugby-union/rss.xml",
+  "enabled": true,
+  "note": "Checked 2026-09-24. Public rugby union RSS returned XML. A score feed returned 429, so rugby union is headlines only. No login and no API key."
+}

@@ -1,0 +1,9 @@
+{
+  "id": "abc-australia",
+  "name": "ABC News",
+  "fetch": "https://www.abc.net.au/news/feed/51120/rss.xml",
+  "language": "en",
+  "region": "oceania",
+  "desks": ["world"],
+  "enabled": true
+}

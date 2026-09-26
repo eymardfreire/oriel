@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 TIERS = ("live", "delayed", "results", "schedule", "far")
-KINDS = ("mlb-schedule", "nhl-schedule", "openligadb", "jolpica-results", "fixture")
+KINDS = ("mlb-schedule", "nhl-schedule", "openligadb", "jolpica-results", "thesportsdb", "fixture")
 FIELD_TIERS = ("live", "delayed", "results", "schedule")
 LINEUP_SLOTS = ("QB", "RB", "RB", "WR", "WR", "TE", "FLEX", "K", "DST")
 FLEX_POSITIONS = frozenset({"RB", "WR", "TE"})
@@ -27,6 +27,12 @@ class Competition:
     kind: str
     fetch: str
     note: str
+    country: str = ""
+    season: str = ""
+    season_start: str = ""
+    season_end: str = ""
+    last_event: str = ""
+    next_event: str = ""
 
 
 @dataclass(frozen=True)
@@ -87,6 +93,12 @@ def load_competitions(path: Path) -> tuple[Competition, ...]:
                 kind=kind,
                 fetch=_text(body.get("fetch"), path, f"competitions[{index}].fetch"),
                 note=_text(body.get("note"), path, f"competitions[{index}].note"),
+                country=_optional_text(body.get("country")),
+                season=_optional_text(body.get("season")),
+                season_start=_optional_date(body.get("season_start"), path, f"competitions[{index}].season_start"),
+                season_end=_optional_date(body.get("season_end"), path, f"competitions[{index}].season_end"),
+                last_event=_optional_date(body.get("last_event"), path, f"competitions[{index}].last_event"),
+                next_event=_optional_date(body.get("next_event"), path, f"competitions[{index}].next_event"),
             )
         )
     return tuple(found)
@@ -99,6 +111,16 @@ def load_follows(path: Path) -> Follows:
         sports=_names(raw.get("sports"), path, "sports"),
         competitors=_names(raw.get("competitors"), path, "competitors"),
     )
+
+
+def save_follows(path: Path, follows: Follows) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    body = {
+        "competitions": list(follows.competitions),
+        "sports": list(follows.sports),
+        "competitors": list(follows.competitors),
+    }
+    path.write_text(json.dumps(body, indent=2) + "\n", encoding="utf-8")
 
 
 def load_roster(path: Path) -> Roster:
@@ -183,6 +205,23 @@ def _object(path: Path) -> dict:
     if not isinstance(raw, dict):
         raise ValueError(f"{path}: expected an object")
     return raw
+
+
+def _optional_text(value: object) -> str:
+    if value is None:
+        return ""
+    if not isinstance(value, str):
+        return ""
+    return value.strip()
+
+
+def _optional_date(value: object, path: Path, label: str) -> str:
+    text = _optional_text(value)
+    if not text:
+        return ""
+    if len(text) != 10 or text[4] != "-" or text[7] != "-":
+        raise ValueError(f"{path}: {label} must be YYYY-MM-DD")
+    return text
 
 
 def _text(value: object, path: Path, label: str) -> str:

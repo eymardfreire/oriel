@@ -7,12 +7,47 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-FAMILIES = ("indices", "equities", "fx", "rates", "commodities", "crypto")
+FAMILIES = (
+    "indices",
+    "sectors",
+    "equities",
+    "london",
+    "europe",
+    "tokyo",
+    "hongkong",
+    "china",
+    "india",
+    "brazil",
+    "canada",
+    "korea",
+    "taiwan",
+    "australia",
+    "funds",
+    "fx",
+    "rates",
+    "bonds",
+    "commodities",
+    "crypto",
+)
 FAMILY_TITLE = {
     "indices": "Indices",
+    "sectors": "Sectors",
     "equities": "Equities",
+    "london": "London",
+    "europe": "Europe",
+    "tokyo": "Tokyo",
+    "hongkong": "Hong Kong",
+    "china": "China",
+    "india": "India",
+    "brazil": "Brazil",
+    "canada": "Canada",
+    "korea": "Korea",
+    "taiwan": "Taiwan",
+    "australia": "Australia",
+    "funds": "Funds",
     "fx": "FX",
     "rates": "Rates",
+    "bonds": "Bonds",
     "commodities": "Commodities",
     "crypto": "Crypto",
 }
@@ -48,6 +83,7 @@ class Instrument:
 class FamilySelection:
     enabled: bool
     instruments: tuple[Instrument, ...]
+    top: int = 0
 
 
 def load_sources(path: Path) -> dict[str, Source]:
@@ -96,7 +132,12 @@ def load_selection(path: Path, sources: dict[str, Source]) -> dict[str, FamilySe
         symbols = [item.symbol for item in instruments]
         if len(symbols) != len(set(symbols)):
             raise ValueError(f"{path}: {family} repeats a symbol")
-        selection[family] = FamilySelection(enabled=enabled, instruments=instruments)
+        top = body.get("top", 0)
+        if isinstance(top, bool) or not isinstance(top, int) or not 0 <= top <= 250:
+            raise ValueError(f"{path}: {family}.top must be an integer from 0 to 250")
+        if top and family != "crypto":
+            raise ValueError(f"{path}: only crypto can set top")
+        selection[family] = FamilySelection(enabled=enabled, instruments=instruments, top=top)
     return selection
 
 

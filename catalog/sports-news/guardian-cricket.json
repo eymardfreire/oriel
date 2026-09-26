@@ -1,0 +1,9 @@
+{
+  "id": "guardian-cricket",
+  "name": "The Guardian",
+  "sport": "cricket",
+  "sport_name": "Cricket",
+  "fetch": "https://www.theguardian.com/sport/cricket/rss",
+  "enabled": true,
+  "note": "Checked 2026-09-24. Public cricket RSS returned XML. No login and no API key."
+}

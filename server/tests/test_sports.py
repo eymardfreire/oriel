@@ -2,6 +2,10 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
+from fastapi.testclient import TestClient
+
+from oriel_server.config import Config, HomePlace, MarketsConfig, SportsConfig, TradeConfig, WeatherConfig, WiresConfig
+from oriel_server.main import create_app
 from oriel_server.sports.catalog import load_competitions
 from oriel_server.sports.poller import SportsPoller
 
@@ -36,12 +40,171 @@ def test_shipped_catalog_has_a_tier_and_omits_unverified_families() -> None:
         "nhl": "live",
         "bundesliga": "results",
         "formula-1": "results",
+        "bundesliga-2": "delayed",
+        "premier-league": "delayed",
+        "la-liga": "delayed",
+        "champions-league": "delayed",
+        "serie-a": "delayed",
+        "ligue-1": "delayed",
+        "brasileirao": "delayed",
+        "nfl": "delayed",
+        "nba": "delayed",
+        "cfl": "delayed",
+        "nrl": "delayed",
+        "liga-3": "far",
+        "npb": "far",
     }
-    families = {item.family for item in competitions}
-    assert "basketball" not in families
-    assert "esports" not in families
+    premier = next(item for item in competitions if item.id == "premier-league")
+    assert premier.season_start == "2026-08-21"
+    assert premier.season_end == "2027-05-30"
+    assert "esports" not in {item.family for item in competitions}
     follows = json.loads((REPO / "catalog" / "sports" / "follows.json").read_text(encoding="utf-8"))
-    assert follows == {"competitions": [], "sports": [], "competitors": []}
+    known = {item.id for item in competitions}
+    assert set(follows) == {"competitions", "sports", "competitors"}
+    assert set(follows["competitions"]) <= known
+    assert isinstance(follows["sports"], list)
+    assert isinstance(follows["competitors"], list)
+
+
+def test_follow_row_carries_the_season_window_and_active_flag(tmp_path: Path) -> None:
+    write_catalog(
+        tmp_path,
+        follows=[],
+        extra={
+            "id": "premier-league",
+            "family": "football",
+            "name": "Premier League",
+            "country": "England",
+            "season": "2026/2027",
+            "season_start": "2026-08-21",
+            "season_end": "2027-05-30",
+            "tier": "delayed",
+            "source_id": "openligadb",
+            "source_name": "OpenLigaDB",
+            "kind": "openligadb",
+            "fetch": "https://api.openligadb.de/getmatchdata/pl/2026",
+            "note": "test",
+        },
+    )
+    poller = SportsPoller(tmp_path, fetcher=lambda url: FAILED, now=lambda: WHEN)
+    poller.refresh()
+    fields = {item["title"]: item["fields"] for item in poller.panel("field-follows")["items"] if item["row"] == "follow"}
+    assert fields["Premier League"]["season_start"] == "2026-08-21"
+    assert fields["Premier League"]["season_end"] == "2027-05-30"
+    assert fields["Premier League"]["flag"] == "active"
+    assert "flag" not in fields["Major League Baseball"]
+
+
+def test_thesportsdb_keeps_one_event_and_a_source_clock() -> None:
+    from oriel_server.sports.catalog import Competition
+    from oriel_server.sports.scores import parse_competition
+
+    competition = Competition(
+        id="nfl",
+        family="american-football",
+        name="NFL",
+        tier="delayed",
+        source_id="thesportsdb",
+        source_name="TheSportsDB",
+        kind="thesportsdb",
+        fetch="https://example.test/next",
+        note="test",
+        country="United States",
+        season="2026",
+    )
+    payload = json.dumps(
+        {
+            "events": [
+                {
+                    "idEvent": "1",
+                    "strHomeTeam": "Atlanta Falcons",
+                    "strAwayTeam": "Green Bay Packers",
+                    "dateEvent": "2026-09-25",
+                    "strStatus": "NS",
+                    "intHomeScore": None,
+                    "intAwayScore": None,
+                },
+                {
+                    "idEvent": "1",
+                    "strHomeTeam": "Atlanta Falcons",
+                    "strAwayTeam": "Green Bay Packers",
+                    "dateEvent": "2026-09-25",
+                    "strStatus": "NS",
+                },
+                {
+                    "idEvent": "2",
+                    "strHomeTeam": "Home",
+                    "strAwayTeam": "Away",
+                    "strTimestamp": "2026-09-23T18:00:00",
+                    "strStatus": "1H",
+                    "strProgress": "12:04",
+                    "intHomeScore": "7",
+                    "intAwayScore": "3",
+                },
+            ]
+        }
+    ).encode()
+    rows = parse_competition(competition, payload, WHEN)
+    assert len(rows) == 2
+    live = next(row for row in rows if row.state == "in progress")
+    assert live.score == "7-3"
+    assert live.clock == "12:04"
+
+
+def test_openligadb_keeps_a_near_fixture_and_drops_the_rest_of_the_season() -> None:
+    from oriel_server.sports.catalog import Competition
+    from oriel_server.sports.scores import parse_competition
+
+    competition = Competition(
+        id="premier-league",
+        family="football",
+        name="Premier League",
+        tier="delayed",
+        source_id="openligadb",
+        source_name="OpenLigaDB",
+        kind="openligadb",
+        fetch="https://example.test/pl",
+        note="test",
+    )
+    payload = json.dumps(
+        [
+            {
+                "team1": {"teamName": "Sunderland"},
+                "team2": {"teamName": "Manchester City"},
+                "matchDateTime": "2027-05-30T15:00:00",
+                "matchIsFinished": False,
+            },
+            {
+                "team1": {"teamName": "Arsenal"},
+                "team2": {"teamName": "Chelsea"},
+                "matchDateTime": "2026-09-26T14:00:00",
+                "matchIsFinished": False,
+            },
+        ]
+    ).encode()
+    rows = parse_competition(competition, payload, WHEN)
+    assert [row.home for row in rows] == ["Arsenal"]
+    assert rows[0].state.startswith("scheduled")
+    assert rows[0].score is None
+
+
+def test_season_flag_follows_the_source_window_or_a_recent_game() -> None:
+    from oriel_server.sports.poller import _season_flag
+
+    competitions = {item.id: item for item in load_competitions(REPO / "catalog" / "sports" / "competitions.json")}
+    assert _season_flag(competitions["nfl"], WHEN) == "active"
+    assert _season_flag(competitions["nba"], WHEN) == "off season"
+    assert _season_flag(competitions["premier-league"], WHEN) == "active"
+    assert _season_flag(competitions["nfl"], WHEN, nfl={"phase": "off", "start": "2026-09-09"}) == "off season"
+
+
+def test_far_desk_names_why_it_is_empty_when_no_far_tier_exists(tmp_path: Path) -> None:
+    write_catalog(tmp_path, follows=[])
+    poller = SportsPoller(tmp_path, fetcher=lambda url: FAILED, now=lambda: WHEN)
+    poller.refresh()
+    panel = poller.panel("far-desk")
+    assert panel["items"][0]["title"] == "No far-coverage competition is configured"
+    assert all(item["row"] != "score" for item in panel["items"])
 
 
 def test_no_follows_fetches_nothing_and_asks_for_follows(tmp_path: Path) -> None:
@@ -293,6 +456,74 @@ def test_points_come_only_from_the_selected_scoring_key(tmp_path: Path) -> None:
     assert pinned is not None
 
 
+def test_follow_unfollow_and_unknown_id(tmp_path: Path) -> None:
+    write_catalog(tmp_path, follows=[])
+    follows_path = tmp_path / "follows.json"
+    roster_path = tmp_path / "roster.json"
+    roster_before = roster_path.read_text(encoding="utf-8")
+    seen: list[str] = []
+
+    def fetch(url: str) -> bytes:
+        seen.append(url)
+        return json.dumps(MLB).encode()
+
+    poller = SportsPoller(tmp_path, fetcher=fetch, now=lambda: WHEN)
+    follows_path.write_text(
+        json.dumps({"competitions": [], "sports": [], "competitors": []}),
+        encoding="utf-8",
+    )
+    config = Config(
+        bind_host="127.0.0.1",
+        bind_port=8787,
+        home_place=HomePlace(id="home", name="unset"),
+        wires=WiresConfig(enabled=False),
+        markets=MarketsConfig(enabled=False),
+        trade=TradeConfig(enabled=False),
+        weather=WeatherConfig(enabled=False),
+        sports=SportsConfig(enabled=False),
+    )
+    client = TestClient(create_app(config, sports_poller=poller))
+    before = follows_path.read_text(encoding="utf-8")
+    rejected = client.post("/bays/field/follows", json={"competition_id": "nope", "follow": True})
+    assert rejected.status_code == 400
+    assert follows_path.read_text(encoding="utf-8") == before
+    assert seen == []
+    assert roster_path.read_text(encoding="utf-8") == roster_before
+
+    followed = client.post("/bays/field/follows", json={"competition_id": "mlb", "follow": True})
+    assert followed.status_code == 200
+    written = json.loads(follows_path.read_text(encoding="utf-8"))
+    assert written == {"competitions": ["mlb"], "sports": [], "competitors": []}
+    assert any("statsapi.mlb.com" in url for url in seen)
+    scores = followed.json()["panels"][0]
+    assert scores["items"][0]["fields"]["score"] == "0-1"
+    assert scores["items"][0]["title"] != "Choose follows"
+    choices = followed.json()["panels"][1]["items"]
+    assert choices[0]["row"] == "follow"
+    assert choices[0]["fields"]["competition_id"] == "mlb"
+    assert choices[0]["fields"]["followed"] is True
+    assert "score" not in choices[0]["fields"]
+    assert roster_path.read_text(encoding="utf-8") == roster_before
+
+    seen.clear()
+    dropped = client.post("/bays/field/follows", json={"competition_id": "mlb", "follow": False})
+    assert dropped.status_code == 200
+    written = json.loads(follows_path.read_text(encoding="utf-8"))
+    assert written == {"competitions": [], "sports": [], "competitors": []}
+    assert seen == []
+    assert dropped.json()["panels"][0]["items"][0]["title"] == "Choose follows"
+    assert all(item["row"] != "score" for item in dropped.json()["panels"][0]["items"])
+    assert dropped.json()["panels"][1]["items"][0]["fields"]["followed"] is False
+
+    follows_path.write_text(
+        json.dumps({"competitions": ["mlb"], "sports": ["baseball"], "competitors": ["Fixture Home"]}),
+        encoding="utf-8",
+    )
+    poller.follow("mlb", False)
+    written = json.loads(follows_path.read_text(encoding="utf-8"))
+    assert written == {"competitions": [], "sports": ["baseball"], "competitors": ["Fixture Home"]}
+
+
 def player(ident: str, name: str, position: str):
     from oriel_server.sports.catalog import Player
 
@@ -336,3 +567,58 @@ def write_catalog(path: Path, *, follows: list[str], extra: dict | None = None) 
         json.dumps({"scoring": "ppr", "starters": [None] * 9, "bench": [], "pins": []}),
         encoding="utf-8",
     )
+
+
+def test_standings_keep_only_reported_figures() -> None:
+    from oriel_server.sports.standings import parse_standings
+
+    rows = parse_standings("openligadb", b'[{"teamName":"Borussia Dortmund","points":10},{"shortName":"Bayern"}]')
+    assert rows[0] == {"rank": "1", "team": "Borussia Dortmund", "line": "10 pts"}
+    assert rows[1]["team"] == "Bayern"
+    assert rows[1]["line"] == ""
+
+
+def test_sideline_starts_most_relevant_and_can_keep_one_sport(tmp_path: Path) -> None:
+    from oriel_server.sports.news import SidelinePoller
+
+    news = tmp_path / "news"
+    news.mkdir()
+    for sport, title in (("cricket", "Cricket story"), ("football", "Football story")):
+        (news / f"{sport}.json").write_text(
+            json.dumps(
+                {
+                    "id": sport,
+                    "name": "Feed",
+                    "sport": sport,
+                    "sport_name": sport.title(),
+                    "fetch": f"https://example.test/{sport}",
+                    "enabled": True,
+                }
+            ),
+            encoding="utf-8",
+        )
+
+    def fetch(url: str) -> bytes:
+        title = "Cricket story" if url.endswith("cricket") else "Football story"
+        return f"""<?xml version="1.0"?><rss><channel><item>
+          <title>{title}</title><link>{url}</link><guid>{title}</guid>
+          <description>Hello there</description>
+          <pubDate>Wed, 23 Sep 2026 18:00:00 GMT</pubDate>
+        </item></channel></rss>""".encode()
+
+    poller = SidelinePoller(news, tmp_path / "sideline.json", fetcher=fetch, now=lambda: WHEN)
+    poller.refresh()
+    headlines = poller.panels()[0]
+    assert headlines["title"] == "Most relevant"
+    assert {item["title"] for item in headlines["items"]} == {"Cricket story", "Football story"}
+    assert headlines["items"][0]["fields"]["summary"] == "Hello there"
+    poller.focus("cricket", True)
+    kept = poller.panels()[0]["items"]
+    assert [item["title"] for item in kept] == ["Cricket story"]
+    picker = poller.panels()[1]["items"]
+    relevant = next(item for item in picker if item["fields"]["sport"] == "relevant")
+    assert relevant["fields"]["followed"] is False
+    import pytest
+
+    with pytest.raises(ValueError):
+        poller.focus("nope", True)

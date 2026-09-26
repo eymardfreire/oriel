@@ -1,0 +1,9 @@
+{
+  "id": "bbc-cricket",
+  "name": "BBC Sport",
+  "sport": "cricket",
+  "sport_name": "Cricket",
+  "fetch": "https://feeds.bbci.co.uk/sport/cricket/rss.xml",
+  "enabled": true,
+  "note": "Checked 2026-09-24. Public cricket RSS returned XML. No score feed answered, so cricket is headlines only. No login and no API key."
+}

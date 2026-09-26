@@ -18,13 +18,16 @@ from oriel_server.sports.catalog import (
     Competition,
     Player,
     Roster,
+    Follows,
     load_competitions,
     load_follows,
     load_roster,
+    save_follows,
     save_roster,
 )
 from oriel_server.sports.roster import assign_flex, drop_player, pin_player, select_player, set_scoring, unpin_player
 from oriel_server.sports.scores import ScoreRow, parse_competition
+from oriel_server.sports.standings import parse_standings, standings_url
 from oriel_server.wires.poller import short_error
 
 logger = logging.getLogger("oriel.sports")
@@ -55,7 +58,10 @@ class SportsPoller:
         self._players = dict(players or {})
         self._points: dict[str, dict] = {}
         self._rows: dict[str, list[ScoreRow]] = {}
+        self._tables: dict[str, list[dict]] = {}
         self._errors: dict[str, str] = {}
+        self._recent: dict[str, str] = {}
+        self._nfl: dict[str, str] = {}
         self._ready = False
         self._lock = threading.Lock()
         self._load_state()
@@ -70,7 +76,10 @@ class SportsPoller:
         now = self._now()
         with self._lock:
             if bay == "field":
-                return [self._field(now)]
+                panels = [self._field(now)]
+                panels.extend(self._standings_panels(now))
+                panels.append(self._follows(now))
+                return panels
             if bay == "far":
                 return [self._far(now)]
             if bay == "fantasy":
@@ -116,6 +125,18 @@ class SportsPoller:
         self.refresh()
         return roster
 
+    def follow(self, competition_id: str, on: bool) -> None:
+        """Write one competition follow. An unknown id leaves the file unchanged."""
+        competitions = load_competitions(self._catalog_dir / "competitions.json")
+        if competition_id not in {item.id for item in competitions}:
+            raise ValueError("competition is not in the catalog")
+        path = self._catalog_dir / "follows.json"
+        current = load_follows(path)
+        kept = [item for item in current.competitions if item != competition_id]
+        if on:
+            kept.append(competition_id)
+        save_follows(path, Follows(competitions=tuple(kept), sports=current.sports, competitors=current.competitors))
+
     def _mutate(self, change: Callable[[Roster], Roster]) -> Roster:
         path = self._catalog_dir / "roster.json"
         roster = change(load_roster(path))
@@ -136,6 +157,7 @@ class SportsPoller:
         follows = load_follows(self._catalog_dir / "follows.json")
         now = self._now()
         rows: dict[str, list[ScoreRow]] = {}
+        tables: dict[str, list[dict]] = {}
         errors: dict[str, str] = {}
         for competition in competitions:
             if not _wanted(competition, follows):
@@ -146,14 +168,51 @@ class SportsPoller:
             except Exception as exc:
                 errors[competition.id] = short_error(exc)
                 rows[competition.id] = list(self._rows.get(competition.id) or [])
+            table_url = standings_url(competition)
+            if not table_url:
+                continue
+            try:
+                tables[competition.id] = parse_standings(competition.kind, self._fetcher(table_url))
+            except Exception:
+                tables[competition.id] = list(self._tables.get(competition.id) or [])
+        recent = dict(self._recent)
+        for competition in competitions:
+            if competition.kind != "thesportsdb" or competition.season_end:
+                continue
+            try:
+                past_url = competition.fetch.replace("eventsnextleague.php", "eventspastleague.php")
+                stamp = _event_date(_events(self._fetcher(past_url)))
+            except Exception:
+                continue
+            if stamp:
+                recent[competition.id] = stamp
+        nfl = dict(self._nfl)
+        if any(competition.id == "nfl" for competition in competitions):
+            try:
+                state = json.loads(self._fetcher("https://api.sleeper.app/v1/state/nfl").decode("utf-8"))
+                if isinstance(state, dict):
+                    phase = str(state.get("season_type") or "")
+                    start = str(state.get("season_start_date") or "")
+                    if phase:
+                        nfl = {"phase": phase, "start": start}
+            except Exception:
+                logger.warning("nfl season state unavailable", exc_info=True)
         self._refresh_points()
         with self._lock:
             self._rows = rows
+            self._tables = tables
             self._errors = errors
+            self._recent = recent
+            self._nfl = nfl
             self._ready = True
             self._save_state()
 
     def _fetch_competition(self, competition: Competition, now: datetime) -> bytes:
+        if competition.kind == "thesportsdb":
+            upcoming = self._fetcher(competition.fetch)
+            past_url = competition.fetch.replace("eventsnextleague.php", "eventspastleague.php")
+            past = self._fetcher(past_url)
+            return json.dumps({"events": _events(upcoming) + _events(past)}).encode()
         if competition.kind != "mlb-schedule":
             return self._fetcher(competition.fetch)
         yesterday = (now - timedelta(days=1)).date().isoformat()
@@ -236,12 +295,67 @@ class SportsPoller:
                 items.append(_score_item(competition, row, now))
         return _panel("field-scores", "Field", now, stale, "; ".join(dict.fromkeys(reasons)), items)
 
+    def _standings_panels(self, now: datetime) -> list[dict]:
+        follows = load_follows(self._catalog_dir / "follows.json")
+        panels: list[dict] = []
+        for competition in load_competitions(self._catalog_dir / "competitions.json"):
+            if not _wanted(competition, follows):
+                continue
+            rows = self._tables.get(competition.id) or []
+            if not rows:
+                continue
+            items = [
+                {
+                    "id": f"standing:{competition.id}:{row['rank']}:{row['team']}",
+                    "title": row["team"],
+                    "source": competition.source_name,
+                    "source_url": standings_url(competition),
+                    "observed_at": _iso(now),
+                    "row": "standing",
+                    "fields": {
+                        "rank": row["rank"],
+                        "team": row["team"],
+                        "line": row["line"],
+                        "family": competition.family,
+                        "league": competition.name,
+                    },
+                }
+                for row in rows
+            ]
+            panels.append(_panel(f"field-standings-{competition.id}", competition.name, now, False, "", items))
+        return panels
+
+    def _follows(self, now: datetime) -> dict:
+        follows = load_follows(self._catalog_dir / "follows.json")
+        chosen = set(follows.competitions)
+        items = []
+        for competition in load_competitions(self._catalog_dir / "competitions.json"):
+            items.append(
+                {
+                    "id": f"follow-{competition.id}",
+                    "title": competition.name,
+                    "source": "Oriel",
+                    "source_url": "",
+                    "observed_at": _iso(now),
+                    "row": "follow",
+                    "fields": _follow_fields(
+                        competition,
+                        competition.id in chosen,
+                        now,
+                        recent=self._recent.get(competition.id, ""),
+                        nfl=self._nfl if competition.id == "nfl" else None,
+                    ),
+                }
+            )
+        return _panel("field-follows", "Follows", now, False, "", items)
+
     def _far(self, now: datetime) -> dict:
         competitions = load_competitions(self._catalog_dir / "competitions.json")
+        far = [competition for competition in competitions if competition.tier == "far"]
+        if not far:
+            return _panel("far-desk", "Far Desk", now, False, "", [_no_far_coverage(now)])
         items: list[dict] = []
-        for competition in competitions:
-            if competition.tier != "far":
-                continue
+        for competition in far:
             for row in self._rows.get(competition.id) or []:
                 items.append(_far_item(competition, row, now))
         return _panel("far-desk", "Far Desk", now, False, "", items)
@@ -316,6 +430,83 @@ def _competitor(row: ScoreRow, names: tuple[str, ...]) -> bool:
     return row.home.casefold() in wanted or row.away.casefold() in wanted
 
 
+def _events(payload: bytes) -> list:
+    try:
+        body = json.loads(payload.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return []
+    events = body.get("events") if isinstance(body, dict) else None
+    return events if isinstance(events, list) else []
+
+
+def _event_date(events: list) -> str:
+    for event in events:
+        if isinstance(event, dict):
+            stamp = str(event.get("dateEvent") or "")
+            if len(stamp) == 10:
+                return stamp
+    return ""
+
+
+def _follow_fields(
+    competition: Competition,
+    followed: bool,
+    now: datetime,
+    *,
+    recent: str = "",
+    nfl: dict | None = None,
+) -> dict:
+    fields: dict = {
+        "competition_id": competition.id,
+        "tier": competition.tier,
+        "family": competition.family,
+        "followed": followed,
+    }
+    if competition.country:
+        fields["country"] = competition.country
+    if competition.season:
+        fields["season"] = competition.season
+    start = competition.season_start
+    if nfl and nfl.get("start"):
+        start = nfl["start"]
+    if start:
+        fields["season_start"] = start
+    if competition.season_end:
+        fields["season_end"] = competition.season_end
+    last = recent or competition.last_event
+    if last:
+        fields["last_event"] = last
+    if competition.next_event:
+        fields["next_event"] = competition.next_event
+    flag = _season_flag(competition, now, recent=recent, nfl=nfl)
+    if flag:
+        fields["flag"] = flag
+    return fields
+
+
+def _season_flag(competition: Competition, now: datetime, *, recent: str = "", nfl: dict | None = None) -> str:
+    today = now.date()
+    if nfl and nfl.get("phase"):
+        phase = nfl["phase"]
+        start = nfl.get("start") or competition.season_start
+        if phase == "off":
+            return "off season"
+        if phase in {"regular", "post", "pre"} and (not start or today >= datetime.fromisoformat(start).date()):
+            return "active"
+    if competition.season_start and competition.season_end:
+        start = datetime.fromisoformat(competition.season_start).date()
+        end = datetime.fromisoformat(competition.season_end).date()
+        if start <= today <= end:
+            return "active"
+        return "off season"
+    last = recent or competition.last_event
+    if last and 0 <= (today - datetime.fromisoformat(last).date()).days <= 28:
+        return "active"
+    if competition.next_event and datetime.fromisoformat(competition.next_event).date() > today:
+        return "off season"
+    return ""
+
+
 def _dates(payload: bytes) -> list:
     try:
         body = json.loads(payload.decode("utf-8"))
@@ -340,6 +531,18 @@ def _sleeper_player(player_id: str, body: object) -> Player | None:
     if not isinstance(team, str):
         team = ""
     return Player(id=player_id, name=name, position=position, team=team)
+
+
+def _no_far_coverage(now: datetime) -> dict:
+    return {
+        "id": "no-far-coverage",
+        "title": "No far-coverage competition is configured",
+        "source": "Oriel",
+        "source_url": "",
+        "observed_at": _iso(now),
+        "row": "headline",
+        "fields": {},
+    }
 
 
 def _choose_follows(now: datetime) -> dict:
@@ -367,11 +570,16 @@ def _named_only(competition: Competition, now: datetime, reason: str) -> dict:
 
 
 def _score_item(competition: Competition, row: ScoreRow, now: datetime) -> dict:
+    state = row.state
+    if row.clock and row.state == "in progress":
+        state = f"in progress {row.clock}"
     fields: dict = {
         "home": row.home,
         "away": row.away,
-        "state": row.state,
+        "state": state,
         "tier": competition.tier,
+        "league": competition.name,
+        "family": competition.family,
     }
     if row.score and competition.tier != "schedule":
         fields["score"] = row.score

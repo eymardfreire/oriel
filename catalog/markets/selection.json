@@ -4,42 +4,303 @@
     "instruments": [
       {"symbol": "SPX", "query": "^GSPC", "title": "S&P 500"},
       {"symbol": "DJI", "query": "^DJI", "title": "Dow Jones"},
-      {"symbol": "NDX", "query": "^NDX", "title": "Nasdaq 100"}
+      {"symbol": "NDX", "query": "^NDX", "title": "Nasdaq 100"},
+      {"symbol": "RUT", "query": "^RUT", "title": "Russell 2000"},
+      {"symbol": "VIX", "query": "^VIX", "title": "CBOE VIX"},
+      {"symbol": "FTSE", "query": "^FTSE", "title": "FTSE 100"},
+      {"symbol": "DAX", "query": "^GDAXI", "title": "DAX"},
+      {"symbol": "CAC", "query": "^FCHI", "title": "CAC 40"},
+      {"symbol": "SX5E", "query": "^STOXX50E", "title": "Euro Stoxx 50"},
+      {"symbol": "N225", "query": "^N225", "title": "Nikkei 225"},
+      {"symbol": "HSI", "query": "^HSI", "title": "Hang Seng"},
+      {"symbol": "SSEC", "query": "000001.SS", "title": "Shanghai Composite"},
+      {"symbol": "KS11", "query": "^KS11", "title": "KOSPI"},
+      {"symbol": "AXJO", "query": "^AXJO", "title": "ASX 200"},
+      {"symbol": "SENSEX", "query": "^BSESN", "title": "BSE Sensex"},
+      {"symbol": "TSX", "query": "^GSPTSE", "title": "S&P/TSX"},
+      {"symbol": "BVSP", "query": "^BVSP", "title": "Ibovespa"}
+    ]
+  },
+  "sectors": {
+    "enabled": true,
+    "instruments": [
+      {"symbol": "XLK", "query": "XLK", "title": "Technology"},
+      {"symbol": "XLF", "query": "XLF", "title": "Financials"},
+      {"symbol": "XLE", "query": "XLE", "title": "Energy"},
+      {"symbol": "XLV", "query": "XLV", "title": "Health care"},
+      {"symbol": "XLY", "query": "XLY", "title": "Consumer discretionary"},
+      {"symbol": "XLP", "query": "XLP", "title": "Consumer staples"},
+      {"symbol": "XLI", "query": "XLI", "title": "Industrials"},
+      {"symbol": "XLB", "query": "XLB", "title": "Materials"},
+      {"symbol": "XLRE", "query": "XLRE", "title": "Real estate"},
+      {"symbol": "XLU", "query": "XLU", "title": "Utilities"},
+      {"symbol": "XLC", "query": "XLC", "title": "Communication services"},
+      {"symbol": "XBI", "query": "XBI", "title": "Biotech"},
+      {"symbol": "XHB", "query": "XHB", "title": "Homebuilders"},
+      {"symbol": "XRT", "query": "XRT", "title": "Retail"},
+      {"symbol": "XME", "query": "XME", "title": "Metals and mining"},
+      {"symbol": "XOP", "query": "XOP", "title": "Oil and gas"},
+      {"symbol": "KRE", "query": "KRE", "title": "Regional banks"},
+      {"symbol": "KBE", "query": "KBE", "title": "Banks"},
+      {"symbol": "XSD", "query": "XSD", "title": "Semiconductors"},
+      {"symbol": "XAR", "query": "XAR", "title": "Aerospace"},
+      {"symbol": "XPH", "query": "XPH", "title": "Pharmaceuticals"},
+      {"symbol": "XTN", "query": "XTN", "title": "Transportation"},
+      {"symbol": "XSW", "query": "XSW", "title": "Software"},
+      {"symbol": "XHE", "query": "XHE", "title": "Health equipment"},
+      {"symbol": "XHS", "query": "XHS", "title": "Health services"},
+      {"symbol": "KIE", "query": "KIE", "title": "Insurance"},
+      {"symbol": "XES", "query": "XES", "title": "Oil equipment"}
     ]
   },
   "equities": {
     "enabled": true,
     "instruments": [
       {"symbol": "AAPL", "query": "AAPL", "title": "Apple"},
-      {"symbol": "MSFT", "query": "MSFT", "title": "Microsoft"}
+      {"symbol": "MSFT", "query": "MSFT", "title": "Microsoft"},
+      {"symbol": "NVDA", "query": "NVDA", "title": "NVIDIA"},
+      {"symbol": "AMZN", "query": "AMZN", "title": "Amazon"},
+      {"symbol": "GOOGL", "query": "GOOGL", "title": "Alphabet"},
+      {"symbol": "META", "query": "META", "title": "Meta"},
+      {"symbol": "AVGO", "query": "AVGO", "title": "Broadcom"},
+      {"symbol": "TSLA", "query": "TSLA", "title": "Tesla"},
+      {"symbol": "AMD", "query": "AMD", "title": "AMD"},
+      {"symbol": "NFLX", "query": "NFLX", "title": "Netflix"},
+      {"symbol": "ORCL", "query": "ORCL", "title": "Oracle"},
+      {"symbol": "TSM", "query": "TSM", "title": "TSMC"},
+      {"symbol": "BRK.B", "query": "BRK-B", "title": "Berkshire Hathaway"},
+      {"symbol": "LLY", "query": "LLY", "title": "Eli Lilly"},
+      {"symbol": "JPM", "query": "JPM", "title": "JPMorgan"},
+      {"symbol": "V", "query": "V", "title": "Visa"},
+      {"symbol": "UNH", "query": "UNH", "title": "UnitedHealth"},
+      {"symbol": "XOM", "query": "XOM", "title": "Exxon Mobil"},
+      {"symbol": "MA", "query": "MA", "title": "Mastercard"},
+      {"symbol": "JNJ", "query": "JNJ", "title": "Johnson & Johnson"},
+      {"symbol": "COST", "query": "COST", "title": "Costco"},
+      {"symbol": "HD", "query": "HD", "title": "Home Depot"},
+      {"symbol": "PG", "query": "PG", "title": "Procter & Gamble"},
+      {"symbol": "BAC", "query": "BAC", "title": "Bank of America"},
+      {"symbol": "GS", "query": "GS", "title": "Goldman Sachs"},
+      {"symbol": "WMT", "query": "WMT", "title": "Walmart"}
+    ]
+  },
+  "london": {
+    "enabled": true,
+    "instruments": [
+      {"symbol": "SHEL", "query": "SHEL.L", "title": "Shell"},
+      {"symbol": "AZN", "query": "AZN.L", "title": "AstraZeneca"},
+      {"symbol": "HSBA", "query": "HSBA.L", "title": "HSBC"},
+      {"symbol": "ULVR", "query": "ULVR.L", "title": "Unilever"},
+      {"symbol": "BP", "query": "BP.L", "title": "BP"},
+      {"symbol": "RIO", "query": "RIO.L", "title": "Rio Tinto"},
+      {"symbol": "GSK", "query": "GSK.L", "title": "GSK"},
+      {"symbol": "RELX", "query": "REL.L", "title": "RELX"}
+    ]
+  },
+  "europe": {
+    "enabled": true,
+    "instruments": [
+      {"symbol": "LVMH", "query": "MC.PA", "title": "LVMH"},
+      {"symbol": "LOREAL", "query": "OR.PA", "title": "L'Oreal"},
+      {"symbol": "TOTAL", "query": "TTE.PA", "title": "TotalEnergies"},
+      {"symbol": "AIRBUS", "query": "AIR.PA", "title": "Airbus"},
+      {"symbol": "SAP", "query": "SAP.DE", "title": "SAP"},
+      {"symbol": "SIEMENS", "query": "SIE.DE", "title": "Siemens"},
+      {"symbol": "ALLIANZ", "query": "ALV.DE", "title": "Allianz"},
+      {"symbol": "ASML", "query": "ASML.AS", "title": "ASML"},
+      {"symbol": "NESN", "query": "NESN.SW", "title": "Nestle"},
+      {"symbol": "NOVN", "query": "NOVN.SW", "title": "Novartis"}
+    ]
+  },
+  "tokyo": {
+    "enabled": true,
+    "instruments": [
+      {"symbol": "TOYOTA", "query": "7203.T", "title": "Toyota"},
+      {"symbol": "SONY", "query": "6758.T", "title": "Sony"},
+      {"symbol": "SOFTBANK", "query": "9984.T", "title": "SoftBank"},
+      {"symbol": "KEYENCE", "query": "6861.T", "title": "Keyence"},
+      {"symbol": "MUFG", "query": "8306.T", "title": "Mitsubishi UFJ"},
+      {"symbol": "TEL", "query": "8035.T", "title": "Tokyo Electron"},
+      {"symbol": "UNIQLO", "query": "9983.T", "title": "Fast Retailing"}
+    ]
+  },
+  "hongkong": {
+    "enabled": true,
+    "instruments": [
+      {"symbol": "TENCENT", "query": "0700.HK", "title": "Tencent"},
+      {"symbol": "BABA", "query": "9988.HK", "title": "Alibaba"},
+      {"symbol": "MEITUAN", "query": "3690.HK", "title": "Meituan"},
+      {"symbol": "XIAOMI", "query": "1810.HK", "title": "Xiaomi"},
+      {"symbol": "AIA", "query": "1299.HK", "title": "AIA"},
+      {"symbol": "CCB", "query": "0939.HK", "title": "China Construction Bank"},
+      {"symbol": "HSBC", "query": "0005.HK", "title": "HSBC"}
+    ]
+  },
+  "china": {
+    "enabled": true,
+    "instruments": [
+      {"symbol": "MOUTAI", "query": "600519.SS", "title": "Kweichow Moutai"},
+      {"symbol": "PINGAN", "query": "601318.SS", "title": "Ping An"},
+      {"symbol": "CMB", "query": "600036.SS", "title": "China Merchants Bank"},
+      {"symbol": "ICBC", "query": "601398.SS", "title": "ICBC"},
+      {"symbol": "CATL", "query": "300750.SZ", "title": "CATL"},
+      {"symbol": "BYD", "query": "002594.SZ", "title": "BYD"}
+    ]
+  },
+  "india": {
+    "enabled": true,
+    "instruments": [
+      {"symbol": "RELIANCE", "query": "RELIANCE.NS", "title": "Reliance"},
+      {"symbol": "TCS", "query": "TCS.NS", "title": "Tata Consultancy Services"},
+      {"symbol": "HDFC", "query": "HDFCBANK.NS", "title": "HDFC Bank"},
+      {"symbol": "INFY", "query": "INFY.NS", "title": "Infosys"},
+      {"symbol": "ICICI", "query": "ICICIBANK.NS", "title": "ICICI Bank"},
+      {"symbol": "AIRTEL", "query": "BHARTIARTL.NS", "title": "Bharti Airtel"}
+    ]
+  },
+  "brazil": {
+    "enabled": true,
+    "instruments": [
+      {"symbol": "PETR4", "query": "PETR4.SA", "title": "Petrobras"},
+      {"symbol": "VALE3", "query": "VALE3.SA", "title": "Vale"},
+      {"symbol": "ITUB4", "query": "ITUB4.SA", "title": "Itau"},
+      {"symbol": "BBDC4", "query": "BBDC4.SA", "title": "Bradesco"},
+      {"symbol": "ABEV3", "query": "ABEV3.SA", "title": "Ambev"},
+      {"symbol": "WEGE3", "query": "WEGE3.SA", "title": "WEG"}
+    ]
+  },
+  "canada": {
+    "enabled": true,
+    "instruments": [
+      {"symbol": "RY", "query": "RY.TO", "title": "Royal Bank of Canada"},
+      {"symbol": "TD", "query": "TD.TO", "title": "Toronto-Dominion"},
+      {"symbol": "SHOP", "query": "SHOP.TO", "title": "Shopify"},
+      {"symbol": "ENB", "query": "ENB.TO", "title": "Enbridge"}
+    ]
+  },
+  "korea": {
+    "enabled": true,
+    "instruments": [
+      {"symbol": "SAMSUNG", "query": "005930.KS", "title": "Samsung Electronics"},
+      {"symbol": "HYNIX", "query": "000660.KS", "title": "SK Hynix"},
+      {"symbol": "HYUNDAI", "query": "005380.KS", "title": "Hyundai Motor"}
+    ]
+  },
+  "taiwan": {
+    "enabled": true,
+    "instruments": [
+      {"symbol": "TSMC", "query": "2330.TW", "title": "TSMC"},
+      {"symbol": "HONHAI", "query": "2317.TW", "title": "Hon Hai"},
+      {"symbol": "MEDIATEK", "query": "2454.TW", "title": "MediaTek"}
+    ]
+  },
+  "australia": {
+    "enabled": true,
+    "instruments": [
+      {"symbol": "BHP", "query": "BHP.AX", "title": "BHP"},
+      {"symbol": "CBA", "query": "CBA.AX", "title": "Commonwealth Bank"},
+      {"symbol": "CSL", "query": "CSL.AX", "title": "CSL"}
+    ]
+  },
+  "funds": {
+    "enabled": true,
+    "instruments": [
+      {"symbol": "SPY", "query": "SPY", "title": "S&P 500, NYSE Arca"},
+      {"symbol": "QQQ", "query": "QQQ", "title": "Nasdaq 100, Nasdaq"},
+      {"symbol": "IWM", "query": "IWM", "title": "Russell 2000, NYSE Arca"},
+      {"symbol": "DIA", "query": "DIA", "title": "Dow, NYSE Arca"},
+      {"symbol": "VTI", "query": "VTI", "title": "Total US, NYSE Arca"},
+      {"symbol": "EFA", "query": "EFA", "title": "Developed ex-US, NYSE Arca"},
+      {"symbol": "EEM", "query": "EEM", "title": "Emerging markets, NYSE Arca"},
+      {"symbol": "EWJ", "query": "EWJ", "title": "Japan, NYSE Arca"},
+      {"symbol": "FXI", "query": "FXI", "title": "China, NYSE Arca"},
+      {"symbol": "EWZ", "query": "EWZ", "title": "Brazil, NYSE Arca"},
+      {"symbol": "INDA", "query": "INDA", "title": "India, Cboe"},
+      {"symbol": "VGK", "query": "VGK", "title": "Europe, NYSE Arca"},
+      {"symbol": "GLD", "query": "GLD", "title": "Gold, NYSE Arca"},
+      {"symbol": "IBIT", "query": "IBIT", "title": "Bitcoin, Nasdaq"}
     ]
   },
   "fx": {
     "enabled": true,
     "instruments": [
       {"symbol": "EURUSD", "base": "EUR", "counter": "USD", "title": "Euro / US dollar"},
-      {"symbol": "USDJPY", "base": "USD", "counter": "JPY", "title": "US dollar / Yen"}
+      {"symbol": "USDJPY", "base": "USD", "counter": "JPY", "title": "US dollar / Yen"},
+      {"symbol": "GBPUSD", "base": "GBP", "counter": "USD", "title": "Sterling / US dollar"},
+      {"symbol": "USDCHF", "base": "USD", "counter": "CHF", "title": "US dollar / Swiss franc"},
+      {"symbol": "AUDUSD", "base": "AUD", "counter": "USD", "title": "Australian dollar / US dollar"},
+      {"symbol": "NZDUSD", "base": "NZD", "counter": "USD", "title": "New Zealand dollar / US dollar"},
+      {"symbol": "USDCAD", "base": "USD", "counter": "CAD", "title": "US dollar / Canadian dollar"},
+      {"symbol": "USDSEK", "base": "USD", "counter": "SEK", "title": "US dollar / Krona"},
+      {"symbol": "USDCNY", "base": "USD", "counter": "CNY", "title": "US dollar / Yuan"},
+      {"symbol": "USDHKD", "base": "USD", "counter": "HKD", "title": "US dollar / Hong Kong dollar"},
+      {"symbol": "USDSGD", "base": "USD", "counter": "SGD", "title": "US dollar / Singapore dollar"},
+      {"symbol": "USDINR", "base": "USD", "counter": "INR", "title": "US dollar / Rupee"},
+      {"symbol": "USDKRW", "base": "USD", "counter": "KRW", "title": "US dollar / Won"},
+      {"symbol": "USDMXN", "base": "USD", "counter": "MXN", "title": "US dollar / Mexican peso"},
+      {"symbol": "USDBRL", "base": "USD", "counter": "BRL", "title": "US dollar / Real"},
+      {"symbol": "USDZAR", "base": "USD", "counter": "ZAR", "title": "US dollar / Rand"},
+      {"symbol": "EURGBP", "base": "EUR", "counter": "GBP", "title": "Euro / Sterling"},
+      {"symbol": "EURJPY", "base": "EUR", "counter": "JPY", "title": "Euro / Yen"}
     ]
   },
   "rates": {
     "enabled": true,
     "instruments": [
+      {"symbol": "US1M", "field": "BC_1MONTH", "title": "US 1-month"},
+      {"symbol": "US3M", "field": "BC_3MONTH", "title": "US 3-month"},
+      {"symbol": "US6M", "field": "BC_6MONTH", "title": "US 6-month"},
+      {"symbol": "US1Y", "field": "BC_1YEAR", "title": "US 1-year"},
       {"symbol": "US2Y", "field": "BC_2YEAR", "title": "US 2-year"},
-      {"symbol": "US10Y", "field": "BC_10YEAR", "title": "US 10-year"}
+      {"symbol": "US3Y", "field": "BC_3YEAR", "title": "US 3-year"},
+      {"symbol": "US5Y", "field": "BC_5YEAR", "title": "US 5-year"},
+      {"symbol": "US7Y", "field": "BC_7YEAR", "title": "US 7-year"},
+      {"symbol": "US10Y", "field": "BC_10YEAR", "title": "US 10-year"},
+      {"symbol": "US20Y", "field": "BC_20YEAR", "title": "US 20-year"},
+      {"symbol": "US30Y", "field": "BC_30YEAR", "title": "US 30-year"}
+    ]
+  },
+  "bonds": {
+    "enabled": true,
+    "instruments": [
+      {"symbol": "SHY", "query": "SHY", "title": "US 1-3 year"},
+      {"symbol": "IEF", "query": "IEF", "title": "US 7-10 year"},
+      {"symbol": "TLT", "query": "TLT", "title": "US 20+ year"},
+      {"symbol": "LQD", "query": "LQD", "title": "Investment grade"},
+      {"symbol": "HYG", "query": "HYG", "title": "High yield"},
+      {"symbol": "EMB", "query": "EMB", "title": "Emerging markets"},
+      {"symbol": "TIP", "query": "TIP", "title": "Inflation linked"}
     ]
   },
   "commodities": {
     "enabled": true,
     "instruments": [
       {"symbol": "XAU", "query": "GC=F", "title": "Gold"},
-      {"symbol": "WTI", "query": "CL=F", "title": "WTI crude"}
+      {"symbol": "XAG", "query": "SI=F", "title": "Silver"},
+      {"symbol": "XPT", "query": "PL=F", "title": "Platinum"},
+      {"symbol": "XPD", "query": "PA=F", "title": "Palladium"},
+      {"symbol": "HG", "query": "HG=F", "title": "Copper"},
+      {"symbol": "WTI", "query": "CL=F", "title": "WTI crude"},
+      {"symbol": "BRENT", "query": "BZ=F", "title": "Brent crude"},
+      {"symbol": "HO", "query": "HO=F", "title": "Heating oil"},
+      {"symbol": "RB", "query": "RB=F", "title": "Gasoline"},
+      {"symbol": "NG", "query": "NG=F", "title": "Natural gas"},
+      {"symbol": "WHEAT", "query": "ZW=F", "title": "Wheat"},
+      {"symbol": "CORN", "query": "ZC=F", "title": "Corn"},
+      {"symbol": "SOY", "query": "ZS=F", "title": "Soybeans"},
+      {"symbol": "KC", "query": "KC=F", "title": "Coffee"},
+      {"symbol": "SB", "query": "SB=F", "title": "Sugar"},
+      {"symbol": "CT", "query": "CT=F", "title": "Cotton"}
     ]
   },
   "crypto": {
     "enabled": true,
+    "top": 48,
     "instruments": [
       {"symbol": "BTC", "query": "bitcoin", "title": "Bitcoin"},
-      {"symbol": "ETH", "query": "ethereum", "title": "Ethereum"}
+      {"symbol": "ETH", "query": "ethereum", "title": "Ethereum"},
+      {"symbol": "SOL", "query": "solana", "title": "Solana"},
+      {"symbol": "XRP", "query": "ripple", "title": "XRP"}
     ]
   }
 }

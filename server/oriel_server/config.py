@@ -14,6 +14,8 @@ class HomePlace:
     name: str
     latitude: float | None = None
     longitude: float | None = None
+    region: str = ""
+    alerts: str = "nws"
 
     @property
     def coordinates_set(self) -> bool:
@@ -107,6 +109,8 @@ def load_config(path: Path | None = None) -> Config:
             name=_text(place.get("name"), "unset"),
             latitude=_coord(place.get("latitude"), "latitude", path),
             longitude=_coord(place.get("longitude"), "longitude", path),
+            region=_optional_text(place.get("region")),
+            alerts=_alerts(place.get("alerts"), path),
         ),
         wires=_wires(raw.get("wires"), path),
         markets=_markets(raw.get("markets"), path),
@@ -166,6 +170,20 @@ def _positive(value: object, name: str, path: Path) -> int:
     if isinstance(value, bool) or not isinstance(value, int) or value < 1:
         raise ValueError(f"{path}: {name} must be an integer of 1 or more")
     return value
+
+
+def _optional_text(value: object) -> str:
+    if not isinstance(value, str):
+        return ""
+    return value.strip()
+
+
+def _alerts(value: object, path: Path) -> str:
+    if value is None or value == "":
+        return "nws"
+    if value not in {"nws", "none"}:
+        raise ValueError(f"{path}: home_place.alerts must be nws or none")
+    return str(value)
 
 
 def _text(value: object, default: str) -> str:

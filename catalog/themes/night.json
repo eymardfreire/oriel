@@ -2,16 +2,16 @@
   "id": "night",
   "mode": "dark",
   "roles": {
-    "bg": "#141414",
-    "surface": "#1c1c1c",
-    "border": "#2c2c2c",
-    "text": "#e6e6e6",
-    "muted": "#8a8a8a",
-    "accent": "#7aa2f7",
-    "up": "#7dcea0",
-    "down": "#e07a7a",
-    "warn": "#e0b15a",
-    "info": "#7aa2f7",
-    "stale": "#a68456"
+    "bg": "#0e1116",
+    "surface": "#161b22",
+    "border": "#2a3340",
+    "text": "#e8eef7",
+    "muted": "#8b9bb0",
+    "accent": "#7eb6ff",
+    "up": "#3dd68c",
+    "down": "#ff6b6b",
+    "warn": "#f0b429",
+    "info": "#7eb6ff",
+    "stale": "#c4a574"
   }
 }

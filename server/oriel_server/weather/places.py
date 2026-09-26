@@ -19,6 +19,8 @@ class Place:
     latitude: float | None
     longitude: float | None
     home: bool = False
+    region: str = ""
+    alerts: str = "nws"
 
     @property
     def configured(self) -> bool:
@@ -39,6 +41,8 @@ def load_places(path: Path, home: HomePlace) -> list[Place]:
             latitude=home.latitude,
             longitude=home.longitude,
             home=True,
+            region=home.region,
+            alerts=home.alerts or "nws",
         )
     ]
     seen = {home.id}
@@ -55,7 +59,7 @@ def _place(raw: object, path: Path, index: int) -> Place:
     where = f"{path}: places[{index}]"
     if not isinstance(raw, dict):
         raise ValueError(f"{where} must be an object")
-    extra = set(raw) - {"id", "name", "latitude", "longitude", "home"}
+    extra = set(raw) - {"id", "name", "latitude", "longitude", "home", "region", "alerts"}
     if extra:
         raise ValueError(f"{where} has unknown fields {', '.join(sorted(extra))}")
     place_id = raw.get("id")
@@ -67,12 +71,20 @@ def _place(raw: object, path: Path, index: int) -> Place:
     home = raw.get("home", False)
     if not isinstance(home, bool):
         raise ValueError(f"{where} home must be true or false")
+    region = raw.get("region", "")
+    if not isinstance(region, str):
+        raise ValueError(f"{where} region must be a string")
+    alerts = raw.get("alerts", "none")
+    if alerts not in {"nws", "none"}:
+        raise ValueError(f"{where} alerts must be nws or none")
     return Place(
         id=place_id,
         name=name.strip(),
         latitude=_coord(raw.get("latitude"), "latitude", where),
         longitude=_coord(raw.get("longitude"), "longitude", where),
         home=home,
+        region=region.strip(),
+        alerts=alerts,
     )
 
 

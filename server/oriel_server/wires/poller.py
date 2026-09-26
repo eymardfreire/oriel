@@ -21,7 +21,7 @@ from oriel_server.wires.rss import FeedEntry, parse_feed
 
 logger = logging.getLogger("oriel.wires")
 
-PANEL_ITEM_LIMIT = 8
+PANEL_ITEM_LIMIT = 24
 MAX_FEED_BYTES = 2_000_000
 Fetcher = Callable[[str], bytes]
 
@@ -326,7 +326,7 @@ def _items(outlet: Outlet, desk: str, entries: list[FeedEntry]) -> list[dict]:
                 "source_url": entry.link,
                 "observed_at": _iso(entry.observed_at),
                 "row": "headline",
-                "fields": {"desk": desk},
+                "fields": _headline_fields(desk, entry.summary),
             }
         )
     return items
@@ -368,13 +368,23 @@ def _parse_iso(value: str) -> datetime | None:
     return parsed.astimezone(timezone.utc)
 
 
+def _headline_fields(desk: str, summary: str) -> dict:
+    fields = {"desk": desk}
+    if summary:
+        fields["summary"] = summary
+    return fields
+
+
 def _entry_state(entry: FeedEntry) -> dict:
-    return {
+    body = {
         "id": entry.id,
         "title": entry.title,
         "link": entry.link,
         "observed_at": _iso(entry.observed_at),
     }
+    if entry.summary:
+        body["summary"] = entry.summary
+    return body
 
 
 def _entry_from_state(raw: object) -> FeedEntry | None:
@@ -391,4 +401,7 @@ def _entry_from_state(raw: object) -> FeedEntry | None:
     parsed = _parse_iso(observed)
     if parsed is None:
         return None
-    return FeedEntry(id=identity, title=title, link=link, observed_at=parsed)
+    summary = raw.get("summary")
+    if not isinstance(summary, str):
+        summary = ""
+    return FeedEntry(id=identity, title=title, link=link, observed_at=parsed, summary=summary.strip())

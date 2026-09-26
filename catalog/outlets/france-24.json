@@ -1,0 +1,9 @@
+{
+  "id": "france-24",
+  "name": "France 24",
+  "fetch": "https://www.france24.com/en/rss",
+  "language": "en",
+  "region": "europe",
+  "desks": ["world"],
+  "enabled": true
+}
